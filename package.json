@@ -1,0 +1,8 @@
+{  
+  "name": "lift-and-earn",  
+  "version": "1.0.0",  
+  "dependencies": {  
+    "three": "^0.155.0",  
+    "sharp": "^0.33.2"  
+  }  
+}  
