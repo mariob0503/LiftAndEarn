@@ -219,7 +219,7 @@
       pointer-events: none;
     }
     /* END NEW */
-    
+
     /* NEW: Celebration animations */
     .celebrationBalloon {
       position: fixed;
@@ -291,7 +291,7 @@
     let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
-    // NEW: Celebration function: creates balloons and one rocket.
+    // NEW: Celebration function: create balloons and one rocket.
     function createCelebration() {
       // Create 5 balloons.
       for (let i = 0; i < 5; i++) {
@@ -313,6 +313,7 @@
     // END NEW
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Get references.
       let sensorReadingsDiv = document.getElementById('sensorReadings');
       let messageDiv = document.getElementById('message');
       let pointsCounterDiv = document.getElementById('pointsCounter');
@@ -320,9 +321,12 @@
       const arrowDiv = document.getElementById('arrow');
       const tapOverlay = document.getElementById('tapOverlay');
 
+      /* Global sensor data variables */
       let devicemotionText = '';
       let deviceOrientationText = '';
       let sensorListenersAdded = false;
+
+      // Throttle sensor updates (every 500ms).
       let lastSensorUpdate = 0;
       function updateSensorReadings() {
         const now = Date.now();
@@ -332,11 +336,15 @@
           sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
         }
       }
+
+      // Utility: Format sensor values.
       function formatValue(val) {
         if (val === null) return 0;
         let rounded = Math.round(val);
         return Math.abs(rounded) < 1 ? 0 : rounded;
       }
+
+      // Points variables.
       let totalPoints = 0;
       function updatePointsCounter() {
         if (pointsCounterDiv) {
@@ -347,6 +355,8 @@
         totalPoints += pts;
         updatePointsCounter();
       }
+
+      // Sensor Reading Handlers (for troubleshooting; not shown on initial screen).
       function sensorDataUpdate(event) {
         let accIG = event.accelerationIncludingGravity;
         let acc = event.acceleration;
@@ -370,6 +380,8 @@
         deviceOrientationText += `Gamma=${formatValue(event.gamma)}.`;
         updateSensorReadings();
       }
+
+      // Success Screen Display with celebration.
       function showSuccessScreen(contentHTML) {
         centerDisplay.innerHTML = contentHTML +
           '<div style="font-size:1.5rem; color:#0091EA; font-weight:bold; margin-top:10px;">' +
@@ -377,6 +389,8 @@
           '</div>';
         createCelebration();
       }
+
+      // Shake Success.
       function showShakeSuccessScreen() {
         const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
           "<div id='shakeAnimation' style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🥤</div>";
@@ -395,6 +409,8 @@
           "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
         showSuccessScreen(contentHTML);
       }
+
+      // NEW: Function to show tap overlay (Chrome only).
       function showTapOverlay() {
         if (navigator.userAgent.indexOf("Chrome") !== -1) {
           tapOverlay.style.display = 'block';
@@ -404,12 +420,17 @@
           });
         }
       }
+      // END NEW
+
+      // Gesture Test Code
+
       /* 1. Shake */
       const shakeButton = document.getElementById('shakeButton');
       let shakeDetected = false;
       let shakeMotionListener = null;
       let shakeTimeout = null;
       let shakeStartTime = null;
+      // Reduced shake duration for easier triggering.
       const shakeListeningTime = 10000;
       const requiredShakeDuration = 1500;
       function handleShakeMotion(event) {
@@ -662,17 +683,16 @@
         function handleSponsorTouchEnd(e) {
           touchEndYSponsor = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - touchEndYSponsor;
-          // NEW: Lower threshold to 20 pixels.
-          if (deltaY > 20) {
+          if (deltaY > 100) {
             endSponsorAction();
           }
-          gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
-          gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
-          gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
+          document.removeEventListener('touchstart', handleSponsorTouchStart);
+          document.removeEventListener('touchmove', handleSponsorTouchMove);
+          document.removeEventListener('touchend', handleSponsorTouchEnd);
         }
-        gamificationContainer.addEventListener('touchstart', handleSponsorTouchStart);
-        gamificationContainer.addEventListener('touchmove', handleSponsorTouchMove);
-        gamificationContainer.addEventListener('touchend', handleSponsorTouchEnd);
+        document.addEventListener('touchstart', handleSponsorTouchStart);
+        document.addEventListener('touchmove', handleSponsorTouchMove);
+        document.addEventListener('touchend', handleSponsorTouchEnd);
         // END NEW
 
         function endSponsorAction() {
@@ -685,12 +705,12 @@
           document.querySelector('.buttons').style.display = 'block';
           addPoints(30);
           messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
-          showSwipeSuccessScreen();
           createCelebration();
         }
         let sponsorTimeout = setTimeout(() => { endSponsorAction(); }, 30000);
       }
       sponsorButton.addEventListener('click', sponsorAction);
+
       /* End Gesture Test Code */
     });
   </script>
