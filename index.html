@@ -213,17 +213,17 @@
       font-family: "Comic Sans MS", cursive, sans-serif;
       pointer-events: none;
     }
-    /* NEW: Open mouth element at the top */
+    /* NEW: Open mouth element at the top (doubled in size and repositioned under header) */
     #openMouth {
       display: none;
       position: fixed;
-      top: 0;
+      top: 100px; /* Adjust this value so it sits under the header */
       left: 50%;
       transform: translateX(-50%);
       z-index: 60;
     }
     #openMouth img {
-      max-width: 200px;
+      max-width: 400px; /* Double the previous size (e.g., from 200px to 400px) */
     }
     /* END NEW */
   </style>
@@ -266,7 +266,7 @@
   <div id="gamificationContainer"></div>
   <!-- NEW: Sponsor overlay text (comic style) -->
   <div id="sponsorOverlay">SWIPE AND EARN</div>
-  <!-- NEW: Open mouth element at the top -->
+  <!-- NEW: Open mouth element -->
   <div id="openMouth">
     <img src="gamification_creatives/open_mouth.png" alt="Open Mouth">
   </div>
@@ -277,8 +277,7 @@
     let isAndroid = /Android/i.test(navigator.userAgent);
     // Further reduce shake threshold for Android: now 0.5 m/s² (very sensitive)
     let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    // Increase required tilt difference for Android (making tilt half as sensitive)  
-    // Previously for Android we set 45°; now set to 90° so that the user must tilt more.
+    // Increase required tilt difference for Android to 90° (making it half as sensitive as before)
     let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
@@ -606,7 +605,7 @@
         // Show the gamification container.
         let gamificationContainer = document.getElementById('gamificationContainer');
         gamificationContainer.style.display = 'block';
-        // Also display the sponsor overlay text and open mouth.
+        // Show sponsor overlay text and open mouth.
         let sponsorOverlay = document.getElementById('sponsorOverlay');
         sponsorOverlay.style.display = 'block';
         let openMouth = document.getElementById('openMouth');
@@ -617,27 +616,26 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        // Clear the container first.
         gamificationContainer.innerHTML = '';
         gamificationContainer.appendChild(renderer.domElement);
 
-        // Load the PNG texture.
+        // Load the PNG texture for the protein bar.
         const textureLoader = new THREE.TextureLoader();
         const texture = textureLoader.load('gamification_creatives/maxi bar with hand.png');
-        // Adjust the geometry for a portrait image (9:16 ratio)
-        const geometry = new THREE.PlaneGeometry(2, 3.56); // Adjusted for portrait aspect ratio
+        // Adjust geometry for portrait (9:16 ratio)
+        const geometry = new THREE.PlaneGeometry(2, 3.56);
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
         const proteinBar = new THREE.Mesh(geometry, material);
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // NEW: Shake the protein bar in intervals: 2 sec shaking, 2 sec still.
-        let shakeActive = false;
+        // NEW: Shake animation in intervals (2 sec on, 2 sec off)
+        let shakingActive = false;
         let toggleInterval = setInterval(() => {
-          shakeActive = !shakeActive;
+          shakingActive = !shakingActive;
         }, 2000);
         let shakeInterval = setInterval(() => {
-          if (shakeActive) {
+          if (shakingActive) {
             proteinBar.position.x = (Math.random() - 0.5) * 0.2;
             proteinBar.position.y = (Math.random() - 0.5) * 0.2;
             proteinBar.rotation.z = (Math.random() - 0.5) * 0.2;
@@ -647,7 +645,7 @@
             proteinBar.rotation.z = 0;
           }
         }, 50);
-        // NEW END
+        // END NEW
 
         // Render the scene.
         let animationId;
@@ -661,17 +659,24 @@
         let sponsorOverlayText = document.getElementById('sponsorOverlay');
         // The overlay text is styled via CSS.
 
-        // Listen for swipe events on the gamification container.
+        // NEW: Listen for swipe events on the gamification container.
         let touchStartYSponsor = null;
         let touchEndYSponsor = null;
         function handleSponsorTouchStart(e) {
           touchStartYSponsor = e.changedTouches[0].screenY;
         }
+        function handleSponsorTouchMove(e) {
+          // Update proteinBar's vertical position according to the swipe delta.
+          let currentY = e.changedTouches[0].screenY;
+          let deltaY = touchStartYSponsor - currentY;
+          // Move the protein bar upward by the delta divided by a scaling factor (e.g., 200).
+          proteinBar.position.y = deltaY / 200;
+        }
         function handleSponsorTouchEnd(e) {
           touchEndYSponsor = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - touchEndYSponsor;
-          if (deltaY > 100) { // if the swipe upward is significant
-            // User swiped the bar into the open mouth.
+          // If the swipe upward is significant (e.g., over 100 pixels), complete the sponsor action.
+          if (deltaY > 100) {
             clearInterval(shakeInterval);
             clearInterval(toggleInterval);
             cancelAnimationFrame(animationId);
@@ -685,10 +690,13 @@
             messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
           }
           document.removeEventListener('touchstart', handleSponsorTouchStart);
+          document.removeEventListener('touchmove', handleSponsorTouchMove);
           document.removeEventListener('touchend', handleSponsorTouchEnd);
         }
         document.addEventListener('touchstart', handleSponsorTouchStart);
+        document.addEventListener('touchmove', handleSponsorTouchMove);
         document.addEventListener('touchend', handleSponsorTouchEnd);
+        // END NEW
 
         // Automatically end the sponsor action after 30 seconds if no swipe occurred.
         setTimeout(() => {
@@ -737,8 +745,6 @@
         document.addEventListener('touchend', handleTouchEnd);
       }
       swipeButton.addEventListener('click', startSwipeTest);
-
-      /* 4. Sponsor is already defined above */
 
       /* End Gesture Test Code */
     });
