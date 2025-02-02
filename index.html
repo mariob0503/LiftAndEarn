@@ -575,9 +575,10 @@
         } else {
           messageDiv.textContent = 'Swipe too short. Push harder!';
         }
-        // Remove listeners from document.body
         document.body.removeEventListener('touchstart', handleTouchStart);
         document.body.removeEventListener('touchend', handleTouchEnd);
+        // Restore pointer events if they were disabled.
+        centerDisplay.style.pointerEvents = 'auto';
       }
       function startSwipeTest() {
         messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
@@ -586,10 +587,11 @@
         arrowDiv.addEventListener('animationend', () => {
           arrowDiv.classList.remove('animate-arrow');
         }, {once: true});
-        // Reinitialize swipe variables
+        // Disable pointer events on the center display so touches reach document.body.
+        centerDisplay.style.pointerEvents = 'none';
+        // Reinitialize swipe variables.
         touchStartY = null;
         touchEndY = null;
-        // Attach listeners to document.body
         document.body.addEventListener('touchstart', handleTouchStart);
         document.body.addEventListener('touchend', handleTouchEnd);
       }
@@ -654,6 +656,7 @@
         animate();
 
         // NEW: Attach swipe event listeners to gamificationContainer.
+        // Reinitialize local swipe variables.
         let touchStartYSponsor = null;
         let touchEndYSponsor = null;
         function handleSponsorTouchStart(e) {
@@ -671,7 +674,6 @@
           if (deltaY > 20) {
             endSponsorAction();
           }
-          // Remove these listeners from the container.
           gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
           gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
           gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
