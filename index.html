@@ -198,11 +198,11 @@
       height: 100%;
       z-index: 50;
     }
-    /* NEW: Sponsor overlay text (comic style) */
+    /* NEW: Sponsor overlay text (comic style, using Arial now) */
     #sponsorOverlay {
       display: none;
       position: fixed;
-      top: 50%;
+      top: 70%;  /* positioned underneath the protein bar */
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 70;
@@ -210,7 +210,7 @@
       font-size: 2.5rem;
       font-weight: bold;
       text-shadow: 3px 3px 5px #000000;
-      font-family: "Comic Sans MS", cursive, sans-serif;
+      font-family: Arial, sans-serif;
       pointer-events: none;
     }
     /* Removed open mouth element */
@@ -253,16 +253,16 @@
 
   <!-- NEW: Container for sponsor gamification scene -->
   <div id="gamificationContainer"></div>
-  <!-- NEW: Sponsor overlay text (comic style) -->
+  <!-- NEW: Sponsor overlay text -->
   <div id="sponsorOverlay">SWIPE AND EARN</div>
   <!-- END NEW -->
 
   <script>
     // NEW: Device detection & calibration
     let isAndroid = /Android/i.test(navigator.userAgent);
-    // Further reduce shake threshold for Android: now 0.5 m/s²
+    // For Android, further reduce shake threshold to 0.5 m/s²
     let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    // Increase required tilt difference for Android to 90° (making tilt half as sensitive as before)
+    // Increase required tilt difference for Android to 90° (making tilt less sensitive)
     let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
@@ -485,7 +485,6 @@
       /* 2. Tilt */
       const tiltButton = document.getElementById('tiltButton');
       let tiltBaseline = null;
-      // For non-Android devices, use deviceorientation; for Android, use devicemotion.
       function handleTilt(event) {
         const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
         if (tiltBaseline === null) {
@@ -591,6 +590,8 @@
         // Show sponsor overlay text.
         let sponsorOverlay = document.getElementById('sponsorOverlay');
         sponsorOverlay.style.display = 'block';
+        // Record the start time for sponsor action.
+        let sponsorStartTime = Date.now();
 
         // Initialize Three.js scene.
         const scene = new THREE.Scene();
@@ -609,22 +610,25 @@
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // NEW: Shake the bar in intervals: 2 seconds shaking, 2 seconds still.
-        let shakingActive = false;
-        let toggleInterval = setInterval(() => {
-          shakingActive = !shakingActive;
-        }, 2000);
-        let shakeInterval = setInterval(() => {
-          if (shakingActive) {
+        // NEW: Shake cycle function - shake for 1.5 sec, pause for 4 sec, repeat.
+        function shakeCycle() {
+          // Check if 30 seconds have passed.
+          if (Date.now() - sponsorStartTime >= 30000) return;
+          let cycleInterval = setInterval(() => {
             proteinBar.position.x = (Math.random() - 0.5) * 0.2;
             proteinBar.position.y = (Math.random() - 0.5) * 0.2;
             proteinBar.rotation.z = (Math.random() - 0.5) * 0.2;
-          } else {
+          }, 50);
+          setTimeout(() => {
+            clearInterval(cycleInterval);
             proteinBar.position.x = 0;
             proteinBar.position.y = 0;
             proteinBar.rotation.z = 0;
-          }
-        }, 50);
+            // Pause for 4 seconds then start next cycle.
+            setTimeout(shakeCycle, 4000);
+          }, 1500);
+        }
+        shakeCycle();
         // END NEW
 
         // Render the scene.
@@ -634,6 +638,8 @@
           renderer.render(scene, camera);
         }
         animate();
+
+        // Adjust sponsor overlay text styling if needed (already styled via CSS).
 
         // NEW: Listen for swipe events on the gamification container.
         let touchStartYSponsor = null;
@@ -650,16 +656,7 @@
           touchEndYSponsor = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - touchEndYSponsor;
           if (deltaY > 100) {
-            clearInterval(shakeInterval);
-            clearInterval(toggleInterval);
-            cancelAnimationFrame(animationId);
-            gamificationContainer.innerHTML = '';
-            gamificationContainer.style.display = 'none';
-            sponsorOverlay.style.display = 'none';
-            centerDisplay.style.display = 'block';
-            document.querySelector('.buttons').style.display = 'block';
-            addPoints(30);
-            messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
+            endSponsorAction();
           }
           document.removeEventListener('touchstart', handleSponsorTouchStart);
           document.removeEventListener('touchmove', handleSponsorTouchMove);
@@ -670,10 +667,8 @@
         document.addEventListener('touchend', handleSponsorTouchEnd);
         // END NEW
 
-        // Automatically end sponsor action after 30 seconds if no swipe occurred.
-        setTimeout(() => {
-          clearInterval(shakeInterval);
-          clearInterval(toggleInterval);
+        function endSponsorAction() {
+          clearTimeout(sponsorTimeout);
           cancelAnimationFrame(animationId);
           gamificationContainer.innerHTML = '';
           gamificationContainer.style.display = 'none';
@@ -682,6 +677,10 @@
           document.querySelector('.buttons').style.display = 'block';
           addPoints(30);
           messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
+        }
+        // Automatically end sponsor action after 30 seconds.
+        let sponsorTimeout = setTimeout(() => {
+          endSponsorAction();
         }, 30000);
       }
       sponsorButton.addEventListener('click', sponsorAction);
