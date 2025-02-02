@@ -41,7 +41,7 @@
     /* Center container for sensor readings / success screens */
     #centerDisplay {
       position: absolute;
-      top: 60%;
+      top: 60%; /* Moved down so it doesn’t overlap the flag */
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
@@ -213,18 +213,7 @@
       font-family: "Comic Sans MS", cursive, sans-serif;
       pointer-events: none;
     }
-    /* NEW: Open mouth element at the top (doubled in size and repositioned under header) */
-    #openMouth {
-      display: none;
-      position: fixed;
-      top: 100px; /* sits below the header */
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 60;
-    }
-    #openMouth img {
-      max-width: 400px;
-    }
+    /* Removed open mouth element */
     /* END NEW */
   </style>
 </head>
@@ -266,10 +255,6 @@
   <div id="gamificationContainer"></div>
   <!-- NEW: Sponsor overlay text (comic style) -->
   <div id="sponsorOverlay">SWIPE AND EARN</div>
-  <!-- NEW: Open mouth element -->
-  <div id="openMouth">
-    <img src="gamification_creatives/open_mouth.png" alt="Open Mouth">
-  </div>
   <!-- END NEW -->
 
   <script>
@@ -277,7 +262,7 @@
     let isAndroid = /Android/i.test(navigator.userAgent);
     // Further reduce shake threshold for Android: now 0.5 m/s²
     let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    // Increase required tilt difference for Android to 90° (half as sensitive as before)
+    // Increase required tilt difference for Android to 90° (making tilt half as sensitive as before)
     let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
@@ -397,9 +382,9 @@
       let shakeDetected = false;
       let shakeMotionListener = null;
       let shakeTimeout = null;
-      let shakeStartTime = null; // For continuous shaking duration tracking
-      const shakeListeningTime = 10000; // 10 seconds overall
-      const requiredShakeDuration = 3000; // 3 seconds required continuous shake
+      let shakeStartTime = null;
+      const shakeListeningTime = 10000;
+      const requiredShakeDuration = 3000;
 
       function handleShakeMotion(event) {
         let acc = event.acceleration;
@@ -603,11 +588,9 @@
         // Show gamification container.
         let gamificationContainer = document.getElementById('gamificationContainer');
         gamificationContainer.style.display = 'block';
-        // Show sponsor overlay text and open mouth.
+        // Show sponsor overlay text.
         let sponsorOverlay = document.getElementById('sponsorOverlay');
         sponsorOverlay.style.display = 'block';
-        let openMouth = document.getElementById('openMouth');
-        openMouth.style.display = 'block';
 
         // Initialize Three.js scene.
         const scene = new THREE.Scene();
@@ -617,17 +600,16 @@
         gamificationContainer.innerHTML = '';
         gamificationContainer.appendChild(renderer.domElement);
 
-        // Load texture for the protein bar.
+        // Load the protein bar texture.
         const textureLoader = new THREE.TextureLoader();
         const texture = textureLoader.load('gamification_creatives/maxi bar with hand.png');
-        // Adjust geometry for portrait (9:16)
         const geometry = new THREE.PlaneGeometry(2, 3.56);
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
         const proteinBar = new THREE.Mesh(geometry, material);
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // NEW: Shake the bar in intervals (2 sec on, 2 sec off)
+        // NEW: Shake the bar in intervals: 2 seconds shaking, 2 seconds still.
         let shakingActive = false;
         let toggleInterval = setInterval(() => {
           shakingActive = !shakingActive;
@@ -662,7 +644,6 @@
         function handleSponsorTouchMove(e) {
           let currentY = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - currentY;
-          // Move the protein bar upward according to swipe delta.
           proteinBar.position.y = deltaY / 200;
         }
         function handleSponsorTouchEnd(e) {
@@ -675,7 +656,6 @@
             gamificationContainer.innerHTML = '';
             gamificationContainer.style.display = 'none';
             sponsorOverlay.style.display = 'none';
-            openMouth.style.display = 'none';
             centerDisplay.style.display = 'block';
             document.querySelector('.buttons').style.display = 'block';
             addPoints(30);
@@ -690,7 +670,7 @@
         document.addEventListener('touchend', handleSponsorTouchEnd);
         // END NEW
 
-        // Automatically end sponsor action after 30 seconds.
+        // Automatically end sponsor action after 30 seconds if no swipe occurred.
         setTimeout(() => {
           clearInterval(shakeInterval);
           clearInterval(toggleInterval);
@@ -698,7 +678,6 @@
           gamificationContainer.innerHTML = '';
           gamificationContainer.style.display = 'none';
           sponsorOverlay.style.display = 'none';
-          openMouth.style.display = 'none';
           centerDisplay.style.display = 'block';
           document.querySelector('.buttons').style.display = 'block';
           addPoints(30);
@@ -706,37 +685,6 @@
         }, 30000);
       }
       sponsorButton.addEventListener('click', sponsorAction);
-
-      /* 3. Swipe */
-      const swipeButton = document.getElementById('swipeButton');
-      let touchStartY = null;
-      let touchEndY = null;
-      function handleTouchStart(e) {
-        touchStartY = e.changedTouches[0].screenY;
-      }
-      function handleTouchEnd(e) {
-        touchEndY = e.changedTouches[0].screenY;
-        const deltaY = touchStartY - touchEndY;
-        if (deltaY > 50) {
-          addPoints(20);
-          showSwipeSuccessScreen();
-        } else {
-          messageDiv.textContent = 'Swipe too short. Push harder!';
-        }
-        document.removeEventListener('touchstart', handleTouchStart);
-        document.removeEventListener('touchend', handleTouchEnd);
-      }
-      function startSwipeTest() {
-        messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
-        arrowDiv.style.display = 'block';
-        arrowDiv.classList.add('animate-arrow');
-        arrowDiv.addEventListener('animationend', () => {
-          arrowDiv.classList.remove('animate-arrow');
-        }, {once: true});
-        document.addEventListener('touchstart', handleTouchStart);
-        document.addEventListener('touchend', handleTouchEnd);
-      }
-      swipeButton.addEventListener('click', startSwipeTest);
 
       /* End Gesture Test Code */
     });
