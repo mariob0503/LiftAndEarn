@@ -191,8 +191,6 @@
       50% { transform: scale(1.1); opacity: 0.7; }
       100% { transform: scale(1); opacity: 1; }
     }
-    /* END NEW */
-    
     /* NEW: Container for sponsor gamification scene */
     #gamificationContainer {
       display: none;
@@ -218,8 +216,6 @@
       font-family: Arial, sans-serif;
       pointer-events: none;
     }
-    /* END NEW */
-    
     /* NEW: Celebration animations */
     .celebrationBalloon {
       position: fixed;
@@ -245,8 +241,6 @@
       10% { bottom: -120px; opacity: 1; transform: scale(1.2); }
       100% { bottom: 100%; transform: scale(1); opacity: 0; }
     }
-    /* END NEW */
-    
   </style>
 </head>
 <body>
@@ -256,9 +250,10 @@
     <div class="subtitle"><span class="blue">LiftAndEarn</span> Gym Reward</div>
   </div>
 
-  <!-- Center container: initial screen message -->
+  <!-- Center container: initial screen message.
+       Note the added <div id="message"> so that messageDiv is defined on page load -->
   <div id="centerDisplay" class="initial">
-    Choose your action to log your points.
+    <div id="message">Choose your action to log your points.</div>
   </div>
 
   <!-- Buttons container -->
@@ -276,28 +271,21 @@
   <div id="tapOverlay">
     <div id="tapMessage">Tap anywhere to continue</div>
   </div>
-  <!-- END NEW -->
-
   <!-- NEW: Container for sponsor gamification scene -->
   <div id="gamificationContainer"></div>
   <!-- NEW: Sponsor overlay text -->
   <div id="sponsorOverlay">SWIPE AND EARN</div>
-  <!-- END NEW -->
 
   <script>
-    // NEW: Device detection & calibration
+    // Device detection & calibration
     let isAndroid = /Android/i.test(navigator.userAgent);
     let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    let requiredTiltDifference = isAndroid ? 90 : 90;
-    // END NEW
-
-    // NEW: Global state for current action ("swipe" or "sponsor" or null)
+    let requiredTiltDifference = 90;
+    // Global state for current action ("swipe", "sponsor", or null)
     let activeAction = null;
-    // END NEW
 
-    // NEW: Celebration function: creates balloons and one rocket.
+    // Celebration function: creates balloons and one rocket.
     function createCelebration() {
-      // Create 5 balloons.
       for (let i = 0; i < 5; i++) {
         let balloon = document.createElement('div');
         balloon.className = 'celebrationBalloon';
@@ -306,7 +294,6 @@
         document.body.appendChild(balloon);
         setTimeout(() => { balloon.remove(); }, 2500);
       }
-      // Create one rocket.
       let rocket = document.createElement('div');
       rocket.className = 'celebrationRocket';
       rocket.style.left = (Math.random() * 50 + 25) + '%';
@@ -314,7 +301,6 @@
       document.body.appendChild(rocket);
       setTimeout(() => { rocket.remove(); }, 5500);
     }
-    // END NEW
 
     document.addEventListener('DOMContentLoaded', () => {
       let sensorReadingsDiv = document.getElementById('sensorReadings');
@@ -426,9 +412,10 @@
             addPoints(20);
             showSwipeSuccessScreen();
           } else {
-            messageDiv.textContent = 'Swipe too short. Push harder!';
+            if(messageDiv) {
+              messageDiv.textContent = 'Swipe too short. Push harder!';
+            }
           }
-          // Reset active action for swipe.
           activeAction = null;
           centerDisplay.style.pointerEvents = 'auto';
         }
@@ -447,7 +434,6 @@
           let currentY = e.changedTouches[0].screenY;
           let deltaY = sponsorSwipeStartY - currentY;
           // Update protein bar position if needed.
-          // (This code is handled later in sponsorAction.)
         }
       });
       document.body.addEventListener('touchend', function(e) {
@@ -618,31 +604,18 @@
 
       /* 3. Swipe */
       const swipeButton = document.getElementById('swipeButton');
-      let swipeStartY = null;
-      let swipeEndY = null;
-      function handleSwipeStart(e) {
-        swipeStartY = e.changedTouches[0].screenY;
-      }
-      function handleSwipeEnd(e) {
-        swipeEndY = e.changedTouches[0].screenY;
-        const deltaY = swipeStartY - swipeEndY;
-        if (deltaY > 50) {
-          addPoints(20);
-          showSwipeSuccessScreen();
-        } else {
-          messageDiv.textContent = 'Swipe too short. Push harder!';
-        }
-        activeAction = null;
-        centerDisplay.style.pointerEvents = 'auto';
-      }
       function startSwipeTest() {
+        // Make sure a message container exists:
+        if (!document.getElementById('message')) {
+          centerDisplay.innerHTML = '<div id="message"></div>';
+          messageDiv = document.getElementById('message');
+        }
         messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
         arrowDiv.style.display = 'block';
         arrowDiv.classList.add('animate-arrow');
         arrowDiv.addEventListener('animationend', () => {
           arrowDiv.classList.remove('animate-arrow');
         }, {once: true});
-        // Set active action to "swipe" and disable pointer events on centerDisplay
         activeAction = "swipe";
         centerDisplay.style.pointerEvents = 'none';
       }
@@ -655,7 +628,7 @@
         document.querySelector('.buttons').style.display = 'none';
         gamificationContainer.style.display = 'block';
         sponsorOverlay.style.display = 'block';
-        activeAction = "sponsor"; // set active action
+        activeAction = "sponsor";
 
         // Initialize Three.js scene.
         const scene = new THREE.Scene();
@@ -674,7 +647,6 @@
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // Shake cycle for the bar.
         let sponsorStartTime = Date.now();
         function shakeCycle() {
           if (Date.now() - sponsorStartTime >= 30000) return;
@@ -693,7 +665,6 @@
         }
         shakeCycle();
 
-        // Render the scene.
         let animationId;
         function animate() {
           animationId = requestAnimationFrame(animate);
@@ -701,7 +672,6 @@
         }
         animate();
 
-        // Attach global sponsor swipe listeners.
         let sponsorSwipeStartY = null;
         let sponsorSwipeEndY = null;
         function handleSponsorSwipeStart(e) {
@@ -728,11 +698,14 @@
           centerDisplay.style.display = 'block';
           document.querySelector('.buttons').style.display = 'block';
           addPoints(30);
+          if(!messageDiv) {
+            centerDisplay.innerHTML = '<div id="message"></div>';
+            messageDiv = document.getElementById('message');
+          }
           messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
           showSwipeSuccessScreen();
           createCelebration();
           activeAction = null;
-          // Remove sponsor swipe listeners
           document.body.removeEventListener('touchstart', handleSponsorSwipeStart);
           document.body.removeEventListener('touchend', handleSponsorSwipeEnd);
         }
@@ -740,7 +713,6 @@
       }
       sponsorButton.addEventListener('click', sponsorAction);
 
-      // Initialize global activeAction variable.
       window.activeAction = null;
     });
   </script>
