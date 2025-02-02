@@ -291,6 +291,10 @@
     let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
+    // NEW: Global state for current action ("swipe" or "sponsor" or null)
+    let activeAction = null;
+    // END NEW
+
     // NEW: Celebration function: creates balloons and one rocket.
     function createCelebration() {
       // Create 5 balloons.
@@ -319,10 +323,11 @@
       const centerDisplay = document.getElementById('centerDisplay');
       const arrowDiv = document.getElementById('arrow');
       const tapOverlay = document.getElementById('tapOverlay');
+      const gamificationContainer = document.getElementById('gamificationContainer');
+      const sponsorOverlay = document.getElementById('sponsorOverlay');
 
       let devicemotionText = '';
       let deviceOrientationText = '';
-      let sensorListenersAdded = false;
       let lastSensorUpdate = 0;
       function updateSensorReadings() {
         const now = Date.now();
@@ -404,6 +409,58 @@
           });
         }
       }
+
+      /* Global swipe listeners for Swipe action */
+      let swipeStartY = null;
+      let swipeEndY = null;
+      document.body.addEventListener('touchstart', function(e) {
+        if (activeAction === "swipe") {
+          swipeStartY = e.changedTouches[0].screenY;
+        }
+      });
+      document.body.addEventListener('touchend', function(e) {
+        if (activeAction === "swipe") {
+          swipeEndY = e.changedTouches[0].screenY;
+          let deltaY = swipeStartY - swipeEndY;
+          if (deltaY > 50) {
+            addPoints(20);
+            showSwipeSuccessScreen();
+          } else {
+            messageDiv.textContent = 'Swipe too short. Push harder!';
+          }
+          // Reset active action for swipe.
+          activeAction = null;
+          centerDisplay.style.pointerEvents = 'auto';
+        }
+      });
+
+      /* Global swipe listeners for Sponsor action on gamification container */
+      let sponsorSwipeStartY = null;
+      let sponsorSwipeEndY = null;
+      document.body.addEventListener('touchstart', function(e) {
+        if (activeAction === "sponsor") {
+          sponsorSwipeStartY = e.changedTouches[0].screenY;
+        }
+      });
+      document.body.addEventListener('touchmove', function(e) {
+        if (activeAction === "sponsor") {
+          let currentY = e.changedTouches[0].screenY;
+          let deltaY = sponsorSwipeStartY - currentY;
+          // Update protein bar position if needed.
+          // (This code is handled later in sponsorAction.)
+        }
+      });
+      document.body.addEventListener('touchend', function(e) {
+        if (activeAction === "sponsor") {
+          sponsorSwipeEndY = e.changedTouches[0].screenY;
+          let deltaY = sponsorSwipeStartY - sponsorSwipeEndY;
+          if (deltaY > 20) { // threshold set to 20 pixels
+            endSponsorAction();
+          }
+          activeAction = null;
+        }
+      });
+
       /* 1. Shake */
       const shakeButton = document.getElementById('shakeButton');
       let shakeDetected = false;
@@ -561,23 +618,21 @@
 
       /* 3. Swipe */
       const swipeButton = document.getElementById('swipeButton');
-      let touchStartY = null;
-      let touchEndY = null;
-      function handleTouchStart(e) {
-        touchStartY = e.changedTouches[0].screenY;
+      let swipeStartY = null;
+      let swipeEndY = null;
+      function handleSwipeStart(e) {
+        swipeStartY = e.changedTouches[0].screenY;
       }
-      function handleTouchEnd(e) {
-        touchEndY = e.changedTouches[0].screenY;
-        const deltaY = touchStartY - touchEndY;
+      function handleSwipeEnd(e) {
+        swipeEndY = e.changedTouches[0].screenY;
+        const deltaY = swipeStartY - swipeEndY;
         if (deltaY > 50) {
           addPoints(20);
           showSwipeSuccessScreen();
         } else {
           messageDiv.textContent = 'Swipe too short. Push harder!';
         }
-        document.body.removeEventListener('touchstart', handleTouchStart);
-        document.body.removeEventListener('touchend', handleTouchEnd);
-        // Restore pointer events if they were disabled.
+        activeAction = null;
         centerDisplay.style.pointerEvents = 'auto';
       }
       function startSwipeTest() {
@@ -587,28 +642,20 @@
         arrowDiv.addEventListener('animationend', () => {
           arrowDiv.classList.remove('animate-arrow');
         }, {once: true});
-        // Disable pointer events on the center display so touches reach document.body.
+        // Set active action to "swipe" and disable pointer events on centerDisplay
+        activeAction = "swipe";
         centerDisplay.style.pointerEvents = 'none';
-        // Reinitialize swipe variables.
-        touchStartY = null;
-        touchEndY = null;
-        document.body.addEventListener('touchstart', handleTouchStart);
-        document.body.addEventListener('touchend', handleTouchEnd);
       }
       swipeButton.addEventListener('click', startSwipeTest);
 
       /* 4. Sponsor */
       const sponsorButton = document.getElementById('sponsorButton');
       function sponsorAction() {
-        // Hide sensor UI and buttons.
         centerDisplay.style.display = 'none';
         document.querySelector('.buttons').style.display = 'none';
-        // Show gamification container.
-        let gamificationContainer = document.getElementById('gamificationContainer');
         gamificationContainer.style.display = 'block';
-        // Show sponsor overlay text.
-        let sponsorOverlay = document.getElementById('sponsorOverlay');
         sponsorOverlay.style.display = 'block';
+        activeAction = "sponsor"; // set active action
 
         // Initialize Three.js scene.
         const scene = new THREE.Scene();
@@ -627,10 +674,10 @@
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // NEW: Shake cycle for the bar: shake for 1.5 sec then pause for 4 sec, repeating.
+        // Shake cycle for the bar.
         let sponsorStartTime = Date.now();
         function shakeCycle() {
-          if (Date.now() - sponsorStartTime >= 30000) return; // Stop after 30 sec.
+          if (Date.now() - sponsorStartTime >= 30000) return;
           let cycleInterval = setInterval(() => {
             proteinBar.position.x = (Math.random() - 0.5) * 0.2;
             proteinBar.position.y = (Math.random() - 0.5) * 0.2;
@@ -641,11 +688,10 @@
             proteinBar.position.x = 0;
             proteinBar.position.y = 0;
             proteinBar.rotation.z = 0;
-            setTimeout(shakeCycle, 4000); // Pause for 4 sec.
-          }, 1500); // Shake for 1.5 sec.
+            setTimeout(shakeCycle, 4000);
+          }, 1500);
         }
         shakeCycle();
-        // END NEW
 
         // Render the scene.
         let animationId;
@@ -655,34 +701,23 @@
         }
         animate();
 
-        // NEW: Attach swipe event listeners to gamificationContainer.
-        // Reinitialize local swipe variables.
-        let touchStartYSponsor = null;
-        let touchEndYSponsor = null;
-        function handleSponsorTouchStart(e) {
-          touchStartYSponsor = e.changedTouches[0].screenY;
+        // Attach global sponsor swipe listeners.
+        let sponsorSwipeStartY = null;
+        let sponsorSwipeEndY = null;
+        function handleSponsorSwipeStart(e) {
+          if (activeAction !== "sponsor") return;
+          sponsorSwipeStartY = e.changedTouches[0].screenY;
         }
-        function handleSponsorTouchMove(e) {
-          let currentY = e.changedTouches[0].screenY;
-          let deltaY = touchStartYSponsor - currentY;
-          proteinBar.position.y = deltaY / 200;
-        }
-        function handleSponsorTouchEnd(e) {
-          touchEndYSponsor = e.changedTouches[0].screenY;
-          let deltaY = touchStartYSponsor - touchEndYSponsor;
-          // Lower threshold to 20 pixels.
+        function handleSponsorSwipeEnd(e) {
+          if (activeAction !== "sponsor") return;
+          sponsorSwipeEndY = e.changedTouches[0].screenY;
+          let deltaY = sponsorSwipeStartY - sponsorSwipeEndY;
           if (deltaY > 20) {
             endSponsorAction();
           }
-          gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
-          gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
-          gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
         }
-        // Always attach fresh listeners.
-        gamificationContainer.addEventListener('touchstart', handleSponsorTouchStart);
-        gamificationContainer.addEventListener('touchmove', handleSponsorTouchMove);
-        gamificationContainer.addEventListener('touchend', handleSponsorTouchEnd);
-        // END NEW
+        document.body.addEventListener('touchstart', handleSponsorSwipeStart);
+        document.body.addEventListener('touchend', handleSponsorSwipeEnd);
 
         function endSponsorAction() {
           clearTimeout(sponsorTimeout);
@@ -696,11 +731,17 @@
           messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
           showSwipeSuccessScreen();
           createCelebration();
+          activeAction = null;
+          // Remove sponsor swipe listeners
+          document.body.removeEventListener('touchstart', handleSponsorSwipeStart);
+          document.body.removeEventListener('touchend', handleSponsorSwipeEnd);
         }
         let sponsorTimeout = setTimeout(() => { endSponsorAction(); }, 30000);
       }
       sponsorButton.addEventListener('click', sponsorAction);
-      /* End Gesture Test Code */
+
+      // Initialize global activeAction variable.
+      window.activeAction = null;
     });
   </script>
 </body>
