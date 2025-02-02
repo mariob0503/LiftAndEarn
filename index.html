@@ -545,7 +545,7 @@
         tiltBaseline = null;
         centerDisplay.innerHTML =
           '<div id="sensorReadings"></div>' +
-          '<div id="message">Tilt: Tilt your phone by ' + requiredTiltDifference + "° to log points!</div>" +
+          '<div id="message">Tilt: Tilt your phone by ' + requiredTiltDifference + '° to log points!</div>' +
           '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
           '<div id="tiltProgressContainer"><div id="tiltProgress"></div></div>';
         sensorReadingsDiv = document.getElementById('sensorReadings');
@@ -575,8 +575,9 @@
         } else {
           messageDiv.textContent = 'Swipe too short. Push harder!';
         }
-        document.removeEventListener('touchstart', handleTouchStart);
-        document.removeEventListener('touchend', handleTouchEnd);
+        // Remove listeners from document.body
+        document.body.removeEventListener('touchstart', handleTouchStart);
+        document.body.removeEventListener('touchend', handleTouchEnd);
       }
       function startSwipeTest() {
         messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
@@ -585,8 +586,12 @@
         arrowDiv.addEventListener('animationend', () => {
           arrowDiv.classList.remove('animate-arrow');
         }, {once: true});
-        document.addEventListener('touchstart', handleTouchStart);
-        document.addEventListener('touchend', handleTouchEnd);
+        // Reinitialize swipe variables
+        touchStartY = null;
+        touchEndY = null;
+        // Attach listeners to document.body
+        document.body.addEventListener('touchstart', handleTouchStart);
+        document.body.addEventListener('touchend', handleTouchEnd);
       }
       swipeButton.addEventListener('click', startSwipeTest);
 
@@ -648,8 +653,7 @@
         }
         animate();
 
-        // NEW: Listen for swipe events on the gamification container.
-        // Always reinitialize the local variables.
+        // NEW: Attach swipe event listeners to gamificationContainer.
         let touchStartYSponsor = null;
         let touchEndYSponsor = null;
         function handleSponsorTouchStart(e) {
@@ -667,15 +671,12 @@
           if (deltaY > 20) {
             endSponsorAction();
           }
-          // Remove listeners.
+          // Remove these listeners from the container.
           gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
           gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
           gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
         }
-        // Remove any existing listeners (if any) before adding new ones.
-        gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
-        gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
-        gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
+        // Always attach fresh listeners.
         gamificationContainer.addEventListener('touchstart', handleSponsorTouchStart);
         gamificationContainer.addEventListener('touchmove', handleSponsorTouchMove);
         gamificationContainer.addEventListener('touchend', handleSponsorTouchEnd);
