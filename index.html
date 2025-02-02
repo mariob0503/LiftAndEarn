@@ -246,6 +246,7 @@
       100% { bottom: 100%; transform: scale(1); opacity: 0; }
     }
     /* END NEW */
+    
   </style>
 </head>
 <body>
@@ -544,7 +545,7 @@
         tiltBaseline = null;
         centerDisplay.innerHTML =
           '<div id="sensorReadings"></div>' +
-          '<div id="message">Tilt: Tilt your phone by ' + requiredTiltDifference + '° to log points!</div>' +
+          '<div id="message">Tilt: Tilt your phone by ' + requiredTiltDifference + "° to log points!</div>" +
           '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
           '<div id="tiltProgressContainer"><div id="tiltProgress"></div></div>';
         sensorReadingsDiv = document.getElementById('sensorReadings');
@@ -648,9 +649,9 @@
         animate();
 
         // NEW: Listen for swipe events on the gamification container.
+        // Always reinitialize the local variables.
         let touchStartYSponsor = null;
         let touchEndYSponsor = null;
-        // Declare local variables here.
         function handleSponsorTouchStart(e) {
           touchStartYSponsor = e.changedTouches[0].screenY;
         }
@@ -666,10 +667,15 @@
           if (deltaY > 20) {
             endSponsorAction();
           }
+          // Remove listeners.
           gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
           gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
           gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
         }
+        // Remove any existing listeners (if any) before adding new ones.
+        gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
+        gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
+        gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
         gamificationContainer.addEventListener('touchstart', handleSponsorTouchStart);
         gamificationContainer.addEventListener('touchmove', handleSponsorTouchMove);
         gamificationContainer.addEventListener('touchend', handleSponsorTouchEnd);
