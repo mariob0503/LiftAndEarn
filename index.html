@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lift & Earn Gamification</title>
+  <title>Lift & Earn</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Include Three.js from CDN for the Sponsor animation -->
+  <!-- Include Three.js from CDN for the sponsor scene -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     /* Global styling using a Simplix-inspired palette */
@@ -187,6 +187,45 @@
       100% { transform: scale(1); opacity: 1; }
     }
     /* END NEW */
+    
+    /* NEW: Container for sponsor gamification scene */
+    #gamificationContainer {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 50;
+    }
+    /* NEW: Overlay text for sponsor action (comic style) */
+    #sponsorOverlay {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 70;
+      color: #ffffff;
+      font-size: 2.5rem;
+      font-weight: bold;
+      text-shadow: 3px 3px 5px #000000;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      pointer-events: none;
+    }
+    /* NEW: Open mouth element at the top */
+    #openMouth {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+    }
+    #openMouth img {
+      max-width: 200px;
+    }
+    /* END NEW */
   </style>
 </head>
 <body>
@@ -223,19 +262,24 @@
   </div>
   <!-- END NEW -->
 
-  <!-- NEW: Container for gamification scene -->
-  <div id="gamificationContainer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:50;"></div>
+  <!-- NEW: Container for sponsor gamification scene -->
+  <div id="gamificationContainer"></div>
+  <!-- NEW: Sponsor overlay text (comic style) -->
+  <div id="sponsorOverlay">SWIPE AND EARN</div>
+  <!-- NEW: Open mouth element -->
+  <div id="openMouth">
+    <img src="gamification_creatives/open_mouth.png" alt="Open Mouth">
+  </div>
   <!-- END NEW -->
 
   <script>
     // NEW: Device detection & calibration (moved into script)
     let isAndroid = /Android/i.test(navigator.userAgent);
-    // Further reduce shake threshold by 50% for Android (from 1.0 to 0.5 m/s²)
+    // Further reduce shake threshold for Android: from 1.0 to 0.5 m/s² for higher sensitivity.
     let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    // Increase required tilt difference for Android by a factor of 2 (making it half as sensitive)
-    let requiredTiltDifference = isAndroid ? 90 : 90; // For now, non-Android remains at 90°. 
-    // (Since earlier we used 45 for Android but now you want it half as sensitive as before,
-    // if previously Android tilt was triggering at 45°, now required tilt will be 90°.)
+    // Increase required tilt difference for Android (making it half as sensitive as before).
+    // Previously for Android we used 45°, now set to 90° so that the user must tilt more.
+    let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -457,7 +501,7 @@
       /* 2. Tilt */
       const tiltButton = document.getElementById('tiltButton');
       let tiltBaseline = null;
-      // For non-Android devices, we use deviceorientation; for Android, we use devicemotion.
+      // For non-Android devices, use deviceorientation; for Android, use devicemotion.
       function handleTilt(event) {
         const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
         if (tiltBaseline === null) {
@@ -514,7 +558,7 @@
         messageDiv = document.getElementById('message');
         pointsCounterDiv = document.getElementById('pointsCounter');
         if (isAndroid) {
-          // For Android, use devicemotion to compute tilt
+          // For Android, use devicemotion to compute tilt.
           window.addEventListener('devicemotion', handleTiltFromMotion);
         } else {
           window.addEventListener('deviceorientation', handleTilt);
@@ -554,63 +598,110 @@
       swipeButton.addEventListener('click', startSwipeTest);
 
       /* 4. Sponsor */
-      // Sponsor button replaces the Reset button.
-      // When Sponsor is clicked, we launch the gamification (Three.js) animation.
       const sponsorButton = document.getElementById('sponsorButton');
       function sponsorAction() {
-        // Hide the sensor UI.
+        // Hide the sensor UI and buttons.
         centerDisplay.style.display = 'none';
         document.querySelector('.buttons').style.display = 'none';
-        // Create a container for the gamification scene.
+        // Show the gamification container.
         let gamificationContainer = document.getElementById('gamificationContainer');
         gamificationContainer.style.display = 'block';
+        // Also display the sponsor overlay text and open mouth.
+        let sponsorOverlay = document.getElementById('sponsorOverlay');
+        sponsorOverlay.style.display = 'block';
+        let openMouth = document.getElementById('openMouth');
+        openMouth.style.display = 'block';
+
         // Initialize Three.js scene.
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x000000, 0); // Transparent background if desired.
+        // Clear the container first.
+        gamificationContainer.innerHTML = '';
         gamificationContainer.appendChild(renderer.domElement);
 
         // Load the PNG texture.
         const textureLoader = new THREE.TextureLoader();
         const texture = textureLoader.load('gamification_creatives/maxi bar with hand.png');
-        // Create a plane geometry and mesh.
-        const geometry = new THREE.PlaneGeometry(4, 4);
+        // Adjust the geometry for a portrait image (9:16 ratio)
+        const geometry = new THREE.PlaneGeometry(2, 3.56); // 2: (2/0.5625)=3.56 approximates 9:16
         const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
         const proteinBar = new THREE.Mesh(geometry, material);
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // Animation loop.
+        // Instead of rotating, shake the protein bar like a ringing phone.
+        let shakeInterval = setInterval(() => {
+          // Apply small random offsets to x and y.
+          proteinBar.position.x = (Math.random() - 0.5) * 0.2;
+          proteinBar.position.y = (Math.random() - 0.5) * 0.2;
+          // Optionally, small random rotation.
+          proteinBar.rotation.z = (Math.random() - 0.5) * 0.2;
+        }, 50);
+
+        // Render the scene.
         let animationId;
         function animate() {
           animationId = requestAnimationFrame(animate);
-          proteinBar.rotation.z += 0.02;
           renderer.render(scene, camera);
         }
         animate();
 
-        // After 5 seconds, end the gamification action and restore the sensor UI.
+        // Show the sponsor overlay text ("SWIPE AND EARN") in comic style.
+        let sponsorOverlayText = document.getElementById('sponsorOverlay');
+        // Already styled in CSS.
+
+        // Listen for swipe events on the gamification container.
+        let touchStartYSponsor = null;
+        let touchEndYSponsor = null;
+        function handleSponsorTouchStart(e) {
+          touchStartYSponsor = e.changedTouches[0].screenY;
+        }
+        function handleSponsorTouchEnd(e) {
+          touchEndYSponsor = e.changedTouches[0].screenY;
+          let deltaY = touchStartYSponsor - touchEndYSponsor;
+          if (deltaY > 100) { // if the swipe upward is significant
+            // User swiped the bar into the open mouth.
+            // End the sponsor animation.
+            clearInterval(shakeInterval);
+            cancelAnimationFrame(animationId);
+            gamificationContainer.innerHTML = '';
+            gamificationContainer.style.display = 'none';
+            sponsorOverlay.style.display = 'none';
+            openMouth.style.display = 'none';
+            // Restore the sensor UI.
+            centerDisplay.style.display = 'block';
+            document.querySelector('.buttons').style.display = 'block';
+            // Award extra points and show success screen.
+            addPoints(30);
+            messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
+          }
+          document.removeEventListener('touchstart', handleSponsorTouchStart);
+          document.removeEventListener('touchend', handleSponsorTouchEnd);
+        }
+        document.addEventListener('touchstart', handleSponsorTouchStart);
+        document.addEventListener('touchend', handleSponsorTouchEnd);
+
+        // Automatically end the sponsor action after 30 seconds if no swipe occurred.
         setTimeout(() => {
+          clearInterval(shakeInterval);
           cancelAnimationFrame(animationId);
           gamificationContainer.innerHTML = '';
           gamificationContainer.style.display = 'none';
+          sponsorOverlay.style.display = 'none';
+          openMouth.style.display = 'none';
           centerDisplay.style.display = 'block';
           document.querySelector('.buttons').style.display = 'block';
-          // Optionally, add extra points for engaging with the sponsor.
           addPoints(30);
           messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
-        }, 5000);
+        }, 30000);
       }
       sponsorButton.addEventListener('click', sponsorAction);
 
       /* End of Sponsor action */
 
-      /* End Gesture Test Code */
-
-      /* 4. Reset is now removed and replaced by Sponsor */
-
+      /* 4. Reset is removed now. */
     });
   </script>
 </body>
