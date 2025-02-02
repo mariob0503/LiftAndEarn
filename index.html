@@ -649,10 +649,8 @@
         animate();
 
         // NEW: Listen for swipe events on the gamification container.
-        // Attach these listeners to gamificationContainer rather than document.
-        gamificationContainer.addEventListener('touchstart', handleSponsorTouchStart);
-        gamificationContainer.addEventListener('touchmove', handleSponsorTouchMove);
-        gamificationContainer.addEventListener('touchend', handleSponsorTouchEnd);
+        let touchStartYSponsor = null;
+        let touchEndYSponsor = null;
         function handleSponsorTouchStart(e) {
           touchStartYSponsor = e.changedTouches[0].screenY;
         }
@@ -664,13 +662,17 @@
         function handleSponsorTouchEnd(e) {
           touchEndYSponsor = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - touchEndYSponsor;
-          if (deltaY > 100) {
+          // NEW: Lower threshold to 20 pixels.
+          if (deltaY > 20) {
             endSponsorAction();
           }
           gamificationContainer.removeEventListener('touchstart', handleSponsorTouchStart);
           gamificationContainer.removeEventListener('touchmove', handleSponsorTouchMove);
           gamificationContainer.removeEventListener('touchend', handleSponsorTouchEnd);
         }
+        gamificationContainer.addEventListener('touchstart', handleSponsorTouchStart);
+        gamificationContainer.addEventListener('touchmove', handleSponsorTouchMove);
+        gamificationContainer.addEventListener('touchend', handleSponsorTouchEnd);
         // END NEW
 
         function endSponsorAction() {
@@ -689,7 +691,6 @@
         let sponsorTimeout = setTimeout(() => { endSponsorAction(); }, 30000);
       }
       sponsorButton.addEventListener('click', sponsorAction);
-
       /* End Gesture Test Code */
     });
   </script>
