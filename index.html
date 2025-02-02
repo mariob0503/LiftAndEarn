@@ -58,7 +58,7 @@
       font-size: 1.3rem;
       margin-bottom: 10px;
     }
-    /* Points balance styled in blue and bold */
+    /* Points balance styled with two colors */
     #pointsCounter {
       font-size: 1.5rem;
       margin-bottom: 10px;
@@ -187,7 +187,7 @@
       100% { transform: scale(1); opacity: 1; }
     }
     /* END NEW */
-
+    
     /* NEW: Container for sponsor gamification scene */
     #gamificationContainer {
       display: none;
@@ -217,7 +217,7 @@
     #openMouth {
       display: none;
       position: fixed;
-      top: 100px; /* Adjust this value so it sits under the header */
+      top: 100px; /* Adjusted so it sits below the header */
       left: 50%;
       transform: translateX(-50%);
       z-index: 60;
@@ -629,7 +629,7 @@
         scene.add(proteinBar);
         camera.position.z = 5;
 
-        // NEW: Shake animation in intervals (2 sec on, 2 sec off)
+        // NEW: Shake the protein bar in intervals (2 sec on, 2 sec off)
         let shakingActive = false;
         let toggleInterval = setInterval(() => {
           shakingActive = !shakingActive;
@@ -669,14 +669,13 @@
           // Update proteinBar's vertical position according to the swipe delta.
           let currentY = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - currentY;
-          // Move the protein bar upward by the delta divided by a scaling factor (e.g., 200).
-          proteinBar.position.y = deltaY / 200;
+          proteinBar.position.y = deltaY / 200; // Scale the movement
         }
         function handleSponsorTouchEnd(e) {
           touchEndYSponsor = e.changedTouches[0].screenY;
           let deltaY = touchStartYSponsor - touchEndYSponsor;
-          // If the swipe upward is significant (e.g., over 100 pixels), complete the sponsor action.
           if (deltaY > 100) {
+            // User swiped the bar upward sufficiently.
             clearInterval(shakeInterval);
             clearInterval(toggleInterval);
             cancelAnimationFrame(animationId);
