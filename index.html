@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Lift & Earn</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Include Three.js from CDN for the sponsor scene -->
+  <!-- Include Three.js from CDN (not used anymore but kept for consistency) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     /* Global styling using a Simplix-inspired palette */
@@ -38,7 +38,7 @@
     .blue {
       color: #0091EA;
     }
-    /* Center container for sensor readings / success screens */
+    /* Center container for messages */
     #centerDisplay {
       position: absolute;
       top: 60%;
@@ -135,35 +135,7 @@
       0% { transform: translateY(0) scale(0.5); opacity: 1; }
       100% { transform: translateY(-150px) scale(1); opacity: 0; }
     }
-    /* Arrow styling and animation for swipe prompt */
-    #arrow {
-      position: absolute;
-      bottom: 140px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 3rem;
-      opacity: 0;
-      display: none;
-      z-index: 5;
-    }
-    .animate-arrow {
-      animation: swipeArrow 1.5s ease-out forwards;
-    }
-    @keyframes swipeArrow {
-      0% { bottom: 140px; opacity: 1; }
-      100% { bottom: 90%; opacity: 0; }
-    }
-    /* CSS animation for shaking protein bottle */
-    @keyframes shake {
-      0% { transform: translate(0px, 0px) rotate(0deg); }
-      25% { transform: translate(2px, -2px) rotate(-5deg); }
-      50% { transform: translate(-2px, 2px) rotate(5deg); }
-      75% { transform: translate(2px, -2px) rotate(-5deg); }
-      100% { transform: translate(0px, 0px) rotate(0deg); }
-    }
-    /* Additional classes for points counter text formatting */
-    .power-white { color: #ffffff; }
-    .points-blue { color: #0091EA; }
+    /* (Swipe and Sponsor buttons removed, so related styles are removed.) */
     /* NEW: Overlay for user tap prompt (Chrome only) */
     #tapOverlay {
       display: none;
@@ -191,56 +163,12 @@
       50% { transform: scale(1.1); opacity: 0.7; }
       100% { transform: scale(1); opacity: 1; }
     }
-    /* NEW: Container for sponsor gamification scene */
-    #gamificationContainer {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 50;
-    }
-    /* NEW: Sponsor overlay text (comic style, Arial) positioned under the bar */
-    #sponsorOverlay {
-      display: none;
-      position: fixed;
-      top: 70%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 70;
-      color: #ffffff;
-      font-size: 2.5rem;
-      font-weight: bold;
-      text-shadow: 3px 3px 5px #000000;
-      font-family: Arial, sans-serif;
-      pointer-events: none;
-    }
-    /* NEW: Celebration animations */
-    .celebrationBalloon {
-      position: fixed;
-      bottom: -150px;
-      animation: celebrateBalloon 2s linear forwards;
-      z-index: 150;
-      font-size: 3rem;
-    }
-    @keyframes celebrateBalloon {
-      0% { bottom: -150px; opacity: 0; }
-      10% { opacity: 1; }
-      100% { bottom: 100%; opacity: 0; }
-    }
-    .celebrationRocket {
-      position: fixed;
-      bottom: -150px;
-      animation: rocket 5s ease-out forwards;
-      z-index: 150;
-      font-size: 5rem;
-    }
-    @keyframes rocket {
-      0% { bottom: -150px; transform: scale(0.5); opacity: 0; }
-      10% { bottom: -120px; opacity: 1; transform: scale(1.2); }
-      100% { bottom: 100%; transform: scale(1); opacity: 0; }
-    }
+    /* END NEW */
+    
+    /* (Swipe and Sponsor specific containers and styles removed) */
+    
+    /* (Celebration animations removed) */
+    
   </style>
 </head>
 <body>
@@ -250,67 +178,36 @@
     <div class="subtitle"><span class="blue">LiftAndEarn</span> Gym Reward</div>
   </div>
 
-  <!-- Center container: initial screen message.
-       Note the added <div id="message"> so that messageDiv is defined on page load -->
+  <!-- Center container: initial screen message -->
   <div id="centerDisplay" class="initial">
-    <div id="message">Choose your action to log your points.</div>
+    Choose your action to log your points.
   </div>
 
-  <!-- Buttons container -->
+  <!-- Buttons container: Only Shake and Tilt remain -->
   <div class="buttons">
     <button id="shakeButton">Shake</button>
     <button id="tiltButton">Tilt</button>
-    <button id="swipeButton">Swipe</button>
-    <button id="sponsorButton">Sponsor</button>
   </div>
 
-  <!-- Arrow element for swipe prompt -->
-  <div id="arrow">⬆️</div>
-  
   <!-- NEW: Tap overlay (Chrome only) -->
   <div id="tapOverlay">
     <div id="tapMessage">Tap anywhere to continue</div>
   </div>
-  <!-- NEW: Container for sponsor gamification scene -->
-  <div id="gamificationContainer"></div>
-  <!-- NEW: Sponsor overlay text -->
-  <div id="sponsorOverlay">SWIPE AND EARN</div>
+  <!-- END NEW -->
 
   <script>
-    // Device detection & calibration
+    // NEW: Device detection & calibration
     let isAndroid = /Android/i.test(navigator.userAgent);
     let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    let requiredTiltDifference = 90;
-    // Global state for current action ("swipe", "sponsor", or null)
-    let activeAction = null;
-
-    // Celebration function: creates balloons and one rocket.
-    function createCelebration() {
-      for (let i = 0; i < 5; i++) {
-        let balloon = document.createElement('div');
-        balloon.className = 'celebrationBalloon';
-        balloon.style.left = Math.random() * 100 + '%';
-        balloon.textContent = '🎈';
-        document.body.appendChild(balloon);
-        setTimeout(() => { balloon.remove(); }, 2500);
-      }
-      let rocket = document.createElement('div');
-      rocket.className = 'celebrationRocket';
-      rocket.style.left = (Math.random() * 50 + 25) + '%';
-      rocket.textContent = '🚀';
-      document.body.appendChild(rocket);
-      setTimeout(() => { rocket.remove(); }, 5500);
-    }
+    let requiredTiltDifference = isAndroid ? 90 : 90;
+    // END NEW
 
     document.addEventListener('DOMContentLoaded', () => {
       let sensorReadingsDiv = document.getElementById('sensorReadings');
       let messageDiv = document.getElementById('message');
       let pointsCounterDiv = document.getElementById('pointsCounter');
       const centerDisplay = document.getElementById('centerDisplay');
-      const arrowDiv = document.getElementById('arrow');
       const tapOverlay = document.getElementById('tapOverlay');
-      const gamificationContainer = document.getElementById('gamificationContainer');
-      const sponsorOverlay = document.getElementById('sponsorOverlay');
 
       let devicemotionText = '';
       let deviceOrientationText = '';
@@ -366,24 +263,17 @@
           '<div style="font-size:1.5rem; color:#0091EA; font-weight:bold; margin-top:10px;">' +
           '<span class="power-white">Power</span><span class="points-blue">Points: ' + totalPoints + '</span>' +
           '</div>';
-        createCelebration();
       }
+      // Modified: On successful shake, redirect to the given URL.
       function showShakeSuccessScreen() {
-        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
-          "<div id='shakeAnimation' style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🥤</div>";
-        showSuccessScreen(contentHTML);
-        const shakeElement = document.getElementById('shakeAnimation');
-        shakeElement.style.animation = "shake 0.5s infinite";
-        setTimeout(() => { shakeElement.style.animation = ""; }, 3000);
+        addPoints(10);
+        // Redirect immediately
+        window.location.href = "https://mariob0503.github.io/bigbang/";
       }
       function showTiltSuccessScreen() {
         const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
           "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
-        showSuccessScreen(contentHTML);
-      }
-      function showSwipeSuccessScreen() {
-        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
-          "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
+        addPoints(15);
         showSuccessScreen(contentHTML);
       }
       function showTapOverlay() {
@@ -395,58 +285,6 @@
           });
         }
       }
-
-      /* Global swipe listeners for Swipe action */
-      let swipeStartY = null;
-      let swipeEndY = null;
-      document.body.addEventListener('touchstart', function(e) {
-        if (activeAction === "swipe") {
-          swipeStartY = e.changedTouches[0].screenY;
-        }
-      });
-      document.body.addEventListener('touchend', function(e) {
-        if (activeAction === "swipe") {
-          swipeEndY = e.changedTouches[0].screenY;
-          let deltaY = swipeStartY - swipeEndY;
-          if (deltaY > 50) {
-            addPoints(20);
-            showSwipeSuccessScreen();
-          } else {
-            if(messageDiv) {
-              messageDiv.textContent = 'Swipe too short. Push harder!';
-            }
-          }
-          activeAction = null;
-          centerDisplay.style.pointerEvents = 'auto';
-        }
-      });
-
-      /* Global swipe listeners for Sponsor action on gamification container */
-      let sponsorSwipeStartY = null;
-      let sponsorSwipeEndY = null;
-      document.body.addEventListener('touchstart', function(e) {
-        if (activeAction === "sponsor") {
-          sponsorSwipeStartY = e.changedTouches[0].screenY;
-        }
-      });
-      document.body.addEventListener('touchmove', function(e) {
-        if (activeAction === "sponsor") {
-          let currentY = e.changedTouches[0].screenY;
-          let deltaY = sponsorSwipeStartY - currentY;
-          // Update protein bar position if needed.
-        }
-      });
-      document.body.addEventListener('touchend', function(e) {
-        if (activeAction === "sponsor") {
-          sponsorSwipeEndY = e.changedTouches[0].screenY;
-          let deltaY = sponsorSwipeStartY - sponsorSwipeEndY;
-          if (deltaY > 20) { // threshold set to 20 pixels
-            endSponsorAction();
-          }
-          activeAction = null;
-        }
-      });
-
       /* 1. Shake */
       const shakeButton = document.getElementById('shakeButton');
       let shakeDetected = false;
@@ -478,7 +316,6 @@
             shakeDetected = true;
             if (shakeTimeout) clearTimeout(shakeTimeout);
             stopShakeListening();
-            addPoints(10);
             showShakeSuccessScreen();
           }
         } else {
@@ -601,119 +438,6 @@
         }
       }
       tiltButton.addEventListener('click', startTiltTest);
-
-      /* 3. Swipe */
-      const swipeButton = document.getElementById('swipeButton');
-      function startSwipeTest() {
-        // Make sure a message container exists:
-        if (!document.getElementById('message')) {
-          centerDisplay.innerHTML = '<div id="message"></div>';
-          messageDiv = document.getElementById('message');
-        }
-        messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
-        arrowDiv.style.display = 'block';
-        arrowDiv.classList.add('animate-arrow');
-        arrowDiv.addEventListener('animationend', () => {
-          arrowDiv.classList.remove('animate-arrow');
-        }, {once: true});
-        activeAction = "swipe";
-        centerDisplay.style.pointerEvents = 'none';
-      }
-      swipeButton.addEventListener('click', startSwipeTest);
-
-      /* 4. Sponsor */
-      const sponsorButton = document.getElementById('sponsorButton');
-      function sponsorAction() {
-        centerDisplay.style.display = 'none';
-        document.querySelector('.buttons').style.display = 'none';
-        gamificationContainer.style.display = 'block';
-        sponsorOverlay.style.display = 'block';
-        activeAction = "sponsor";
-
-        // Initialize Three.js scene.
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        gamificationContainer.innerHTML = '';
-        gamificationContainer.appendChild(renderer.domElement);
-
-        // Load the protein bar texture.
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load('gamification_creatives/maxi bar with hand.png');
-        const geometry = new THREE.PlaneGeometry(2, 3.56);
-        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-        const proteinBar = new THREE.Mesh(geometry, material);
-        scene.add(proteinBar);
-        camera.position.z = 5;
-
-        let sponsorStartTime = Date.now();
-        function shakeCycle() {
-          if (Date.now() - sponsorStartTime >= 30000) return;
-          let cycleInterval = setInterval(() => {
-            proteinBar.position.x = (Math.random() - 0.5) * 0.2;
-            proteinBar.position.y = (Math.random() - 0.5) * 0.2;
-            proteinBar.rotation.z = (Math.random() - 0.5) * 0.2;
-          }, 50);
-          setTimeout(() => {
-            clearInterval(cycleInterval);
-            proteinBar.position.x = 0;
-            proteinBar.position.y = 0;
-            proteinBar.rotation.z = 0;
-            setTimeout(shakeCycle, 4000);
-          }, 1500);
-        }
-        shakeCycle();
-
-        let animationId;
-        function animate() {
-          animationId = requestAnimationFrame(animate);
-          renderer.render(scene, camera);
-        }
-        animate();
-
-        let sponsorSwipeStartY = null;
-        let sponsorSwipeEndY = null;
-        function handleSponsorSwipeStart(e) {
-          if (activeAction !== "sponsor") return;
-          sponsorSwipeStartY = e.changedTouches[0].screenY;
-        }
-        function handleSponsorSwipeEnd(e) {
-          if (activeAction !== "sponsor") return;
-          sponsorSwipeEndY = e.changedTouches[0].screenY;
-          let deltaY = sponsorSwipeStartY - sponsorSwipeEndY;
-          if (deltaY > 20) {
-            endSponsorAction();
-          }
-        }
-        document.body.addEventListener('touchstart', handleSponsorSwipeStart);
-        document.body.addEventListener('touchend', handleSponsorSwipeEnd);
-
-        function endSponsorAction() {
-          clearTimeout(sponsorTimeout);
-          cancelAnimationFrame(animationId);
-          gamificationContainer.innerHTML = '';
-          gamificationContainer.style.display = 'none';
-          sponsorOverlay.style.display = 'none';
-          centerDisplay.style.display = 'block';
-          document.querySelector('.buttons').style.display = 'block';
-          addPoints(30);
-          if(!messageDiv) {
-            centerDisplay.innerHTML = '<div id="message"></div>';
-            messageDiv = document.getElementById('message');
-          }
-          messageDiv.textContent = "Sponsor action complete! Extra PowerPoints awarded!";
-          showSwipeSuccessScreen();
-          createCelebration();
-          activeAction = null;
-          document.body.removeEventListener('touchstart', handleSponsorSwipeStart);
-          document.body.removeEventListener('touchend', handleSponsorSwipeEnd);
-        }
-        let sponsorTimeout = setTimeout(() => { endSponsorAction(); }, 30000);
-      }
-      sponsorButton.addEventListener('click', sponsorAction);
-
-      window.activeAction = null;
     });
   </script>
 </body>
