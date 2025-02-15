@@ -4,7 +4,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { generateQRCode } from "./qr.js";
 
-// Your Firebase configuration (replace with your actual values)
+// Firebase configuration (replace with your actual values)
 const firebaseConfig = {
   apiKey: "AIzaSyBkhEqivOcbkzd1MySLaNCRuSyeWbEz4UQ",
   authDomain: "simplixliftandearn.firebaseapp.com",
@@ -21,26 +21,25 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// Determine if this instance is a Controller based on a query parameter.
+// Determine if this instance is a Controller based on the query parameter.
 const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has('controller');
 console.log("Is Controller:", isController);
 
-// On the Display, clear any old control message before generating the QR code.
+// On the Display, clear any old control message so the QR code remains visible until a new message arrives.
 if (!isController) {
   set(ref(db, "liftandearn/control"), null)
     .then(() => {
-      console.log("Display: Old control message cleared.");
+      console.log("Display: Cleared old control message.");
       // Now generate the QR code that points to the Controller URL.
       generateQRCode("qrContainer", window.location.href + "?controller");
     })
     .catch((error) => {
       console.error("Display: Error clearing control message:", error);
-      // Even on error, generate the QR code.
       generateQRCode("qrContainer", window.location.href + "?controller");
     });
 } else {
-  // On the Controller, simply hide the QR code container.
+  // On the Controller, hide the QR code container.
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
@@ -48,18 +47,28 @@ if (!isController) {
   console.log("Controller: QR code container hidden.");
 }
 
-// Listen for control messages on the Display.
+// On the Display, set up a realtime listener for control messages.
 if (!isController) {
   const controlRef = ref(db, "liftandearn/control");
   onValue(controlRef, (snapshot) => {
     const data = snapshot.val();
     console.log("Display received control message:", data);
-    if (data && data.message === "control-taken") {
-      const qrContainer = document.getElementById("qrContainer");
-      if (qrContainer) {
-        qrContainer.style.display = "none";
+    if (data) {
+      if (data.message === "controller-online") {
+        // When the Controller comes online, hide the QR code and show the control message.
+        const qrContainer = document.getElementById("qrContainer");
+        if (qrContainer) {
+          qrContainer.style.display = "none";
+        }
+        document.getElementById("displayArea").innerText = "Control taken by Controller.";
+      } else if (data.message === "shake-action") {
+        document.getElementById("displayArea").innerText = "Shake action received on Display!";
+      } else if (data.message === "tilt-action") {
+        document.getElementById("displayArea").innerText = "Tilt action received on Display!";
+      } else if (data.message === "log-points") {
+        console.log("Display: Received 'log-points' message. Redirecting...");
+        window.location.href = "https://mariob0503.github.io/simplix/";
       }
-      document.getElementById("displayArea").innerText = "Control taken by Controller.";
     }
   });
 }
@@ -78,14 +87,18 @@ function sendControlMessage(message) {
     });
 }
 
+// On the Controller, immediately send a "controller-online" message when the page loads.
+if (isController) {
+  sendControlMessage("controller-online");
+}
+
 // Button event listeners.
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
     console.log("Controller: Shake button pressed");
-    sendControlMessage("control-taken");
+    sendControlMessage("shake-action");
     document.getElementById("displayArea").innerText = "Shake action received on Controller!";
   } else {
-    console.log("Display: Shake button pressed");
     document.getElementById("displayArea").innerText = "Shake action received on Display!";
   }
 });
@@ -93,10 +106,9 @@ document.getElementById("shakeButton").addEventListener("click", () => {
 document.getElementById("tiltButton").addEventListener("click", () => {
   if (isController) {
     console.log("Controller: Tilt button pressed");
-    sendControlMessage("control-taken");
+    sendControlMessage("tilt-action");
     document.getElementById("displayArea").innerText = "Tilt action received on Controller!";
   } else {
-    console.log("Display: Tilt button pressed");
     document.getElementById("displayArea").innerText = "Tilt action received on Display!";
   }
 });
@@ -107,7 +119,6 @@ document.getElementById("logPointsButton").addEventListener("click", () => {
     sendControlMessage("log-points");
     document.getElementById("displayArea").innerText = "Log Points action received on Controller!";
   } else {
-    console.log("Display: Log Points button pressed");
     document.getElementById("displayArea").innerText = "Log Points action received on Display!";
   }
 });
