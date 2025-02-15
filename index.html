@@ -7,7 +7,9 @@
   <!-- Include QRCode.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    /* Minimal inline styles for demonstration */
+    /* Minimal inline styles for demonstration.
+       In production, you can expand these or use Tailwind CSS.
+       Our styling should follow our existing style at https://mariob0503.github.io/simplix/ */
     body { background-color: #121212; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; }
     header { text-align: center; padding: 20px 0; }
     header h1 { font-size: 2.86rem; }
@@ -25,8 +27,8 @@
     <p style="font-size: 0.9rem;">Refer to our style at <a href="https://mariob0503.github.io/simplix/" target="_blank" style="color: #0091EA;">Simplix</a></p>
   </header>
 
-  <!-- Main container: QR code and buttons -->
-  <div id="centerDisplay" class="initial">
+  <!-- Main container: The Display page shows a QR code and buttons -->
+  <div id="centerDisplay">
     <div id="qrContainer"></div>
     <div class="buttons">
       <button id="shakeButton">Shake</button>
@@ -38,8 +40,8 @@
   <!-- Display area for messages -->
   <div id="displayArea"></div>
 
-  <!-- Include our JavaScript files -->
-  <script src="qr.js"></script>
-  <script src="main.js"></script>
+  <!-- Load our JavaScript modules -->
+  <!-- We use type="module" so that we can use ES module imports -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
