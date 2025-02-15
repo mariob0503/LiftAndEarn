@@ -4,7 +4,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { generateQRCode } from "./qr.js";
 
-// Firebase configuration (replace with your actual values)
+// Your Firebase configuration (replace with your actual values)
 const firebaseConfig = {
   apiKey: "AIzaSyBkhEqivOcbkzd1MySLaNCRuSyeWbEz4UQ",
   authDomain: "simplixliftandearn.firebaseapp.com",
@@ -26,12 +26,13 @@ const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has('controller');
 console.log("Is Controller:", isController);
 
-// On the Display, clear any old control message so the QR code remains visible until a new message arrives.
+// ---------------------------
+// On the Display: Clear any old control message, then generate QR code.
 if (!isController) {
   set(ref(db, "liftandearn/control"), null)
     .then(() => {
       console.log("Display: Cleared old control message.");
-      // Now generate the QR code that points to the Controller URL.
+      // Now generate the QR code.
       generateQRCode("qrContainer", window.location.href + "?controller");
     })
     .catch((error) => {
@@ -39,14 +40,19 @@ if (!isController) {
       generateQRCode("qrContainer", window.location.href + "?controller");
     });
 } else {
-  // On the Controller, hide the QR code container.
+  // On the Controller: Hide the QR code container.
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
   }
   console.log("Controller: QR code container hidden.");
+  // Delay sending the "controller-online" message to allow the Display to refresh.
+  setTimeout(() => {
+    sendControlMessage("controller-online");
+  }, 2000);
 }
 
+// ---------------------------
 // On the Display, set up a realtime listener for control messages.
 if (!isController) {
   const controlRef = ref(db, "liftandearn/control");
@@ -55,7 +61,7 @@ if (!isController) {
     console.log("Display received control message:", data);
     if (data) {
       if (data.message === "controller-online") {
-        // When the Controller comes online, hide the QR code and show the control message.
+        // Hide QR code and update display.
         const qrContainer = document.getElementById("qrContainer");
         if (qrContainer) {
           qrContainer.style.display = "none";
@@ -73,6 +79,7 @@ if (!isController) {
   });
 }
 
+// ---------------------------
 // Function for the Controller to send a control message.
 function sendControlMessage(message) {
   set(ref(db, "liftandearn/control"), {
@@ -87,11 +94,7 @@ function sendControlMessage(message) {
     });
 }
 
-// On the Controller, immediately send a "controller-online" message when the page loads.
-if (isController) {
-  sendControlMessage("controller-online");
-}
-
+// ---------------------------
 // Button event listeners.
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
