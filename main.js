@@ -5,39 +5,64 @@ document.addEventListener('DOMContentLoaded', function() {
   const isController = urlParams.has('controller'); // e.g., URL: .../LiftandEarn/?controller
   console.log("Is Controller:", isController);
 
-  // Set up a BroadcastChannel for communication between Display and Controller.
-  const bc = new BroadcastChannel('liftandearn_channel');
-  bc.onmessage = function(event) {
-    console.log("BroadcastChannel message received:", event.data);
-    debugger; // Pause here to inspect the event if needed.
-    if (!isController && event.data === 'control-taken') {
-      console.log("Received 'control-taken' on Display");
-      // On the Display, hide the QR code and update the display area.
-      const qrContainer = document.getElementById('qrContainer');
-      if (qrContainer) {
-        qrContainer.style.display = 'none';
+  // Initialize messaging mechanism.
+  let channel;
+  let useLocalStorageFallback = false;
+  
+  if ('BroadcastChannel' in window) {
+    channel = new BroadcastChannel('liftandearn_channel');
+    channel.onmessage = function(event) {
+      console.log("BroadcastChannel message received:", event.data);
+      debugger; // Breakpoint for debugging.
+      if (!isController && event.data === 'control-taken') {
+        console.log("Received 'control-taken' on Display via BroadcastChannel");
+        const qrContainer = document.getElementById('qrContainer');
+        if (qrContainer) {
+          qrContainer.style.display = 'none';
+        }
+        document.getElementById('displayArea').innerText = "Control taken by Controller.";
       }
-      document.getElementById('displayArea').innerText = "Control taken by Controller.";
-    }
-  };
-
-  // Temporary test: on the Controller, immediately send a broadcast message
-  // (Uncomment the following block to test immediate broadcast)
-  /*
-  if (isController) {
-    console.log("Controller: Sending test broadcast on load");
-    bc.postMessage('control-taken');
+    };
+  } else {
+    // Fallback: Use localStorage events.
+    useLocalStorageFallback = true;
+    window.addEventListener('storage', function(event) {
+      if (!isController && event.key === 'liftandearn_message') {
+        try {
+          let data = JSON.parse(event.newValue);
+          console.log("LocalStorage event received:", data);
+          if (data.message === 'control-taken') {
+            const qrContainer = document.getElementById('qrContainer');
+            if (qrContainer) {
+              qrContainer.style.display = 'none';
+            }
+            document.getElementById('displayArea').innerText = "Control taken by Controller.";
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    });
   }
-  */
 
-  // On the Display, generate the QR code.
+  // Function to send a message from the Controller.
+  function sendMessage(message) {
+    if (channel) {
+      channel.postMessage(message);
+      console.log("Message sent via BroadcastChannel:", message);
+    } else if (useLocalStorageFallback) {
+      localStorage.setItem('liftandearn_message', JSON.stringify({ message: message, timestamp: Date.now() }));
+      console.log("Message sent via localStorage:", message);
+    }
+  }
+
+  // On the Display (without ?controller), generate the QR code.
   if (!isController) {
     console.log("Display: Generating QR code");
-    // Generate a QR code that points to the Controller version (append "?controller" to the URL)
+    // Generate a QR code that points to the Controller version.
     generateQRCode("qrContainer", window.location.href + "?controller");
   } else {
     console.log("Controller: Hiding QR code container");
-    // On the Controller, hide the QR code container.
     const qrContainer = document.getElementById('qrContainer');
     if (qrContainer) {
       qrContainer.style.display = 'none';
@@ -48,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('shakeButton').addEventListener('click', function() {
     if (isController) {
       console.log("Shake button pressed on Controller");
-      bc.postMessage('control-taken');
+      sendMessage('control-taken');
       console.log("Broadcast message sent from Controller (Shake)");
       document.getElementById('displayArea').innerText = "Shake action received on Controller!";
     } else {
@@ -60,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('tiltButton').addEventListener('click', function() {
     if (isController) {
       console.log("Tilt button pressed on Controller");
-      bc.postMessage('control-taken');
+      sendMessage('control-taken');
       console.log("Broadcast message sent from Controller (Tilt)");
       document.getElementById('displayArea').innerText = "Tilt action received on Controller!";
     } else {
@@ -72,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('logPointsButton').addEventListener('click', function() {
     if (isController) {
       console.log("Log Points button pressed on Controller");
-      bc.postMessage('control-taken');
+      sendMessage('control-taken');
       console.log("Broadcast message sent from Controller (Log Points)");
       document.getElementById('displayArea').innerText = "Log Points action received on Controller!";
     } else {
