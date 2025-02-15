@@ -4,7 +4,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { generateQRCode } from "./qr.js";
 
-// Your Firebase configuration
+// Your Firebase configuration (replace with your actual values)
 const firebaseConfig = {
   apiKey: "AIzaSyBkhEqivOcbkzd1MySLaNCRuSyeWbEz4UQ",
   authDomain: "simplixliftandearn.firebaseapp.com",
@@ -21,32 +21,31 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// Determine if this instance is a Controller based on the query parameter.
+// Determine if this instance is a Controller based on a query parameter.
 const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has('controller');
 console.log("Is Controller:", isController);
 
-// On the Display, clear any old control message so that the QR code shows on fresh load.
+// On the Display, clear any old control message before generating the QR code.
 if (!isController) {
   set(ref(db, "liftandearn/control"), null)
     .then(() => {
-      console.log("Display: Cleared old control message.");
+      console.log("Display: Old control message cleared.");
+      // Now generate the QR code that points to the Controller URL.
+      generateQRCode("qrContainer", window.location.href + "?controller");
     })
     .catch((error) => {
       console.error("Display: Error clearing control message:", error);
+      // Even on error, generate the QR code.
+      generateQRCode("qrContainer", window.location.href + "?controller");
     });
-}
-
-// On the Display, generate the QR code.
-if (!isController) {
-  console.log("Display: Generating QR code");
-  generateQRCode("qrContainer", window.location.href + "?controller");
 } else {
-  console.log("Controller: Hiding QR code container");
+  // On the Controller, simply hide the QR code container.
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
   }
+  console.log("Controller: QR code container hidden.");
 }
 
 // Listen for control messages on the Display.
