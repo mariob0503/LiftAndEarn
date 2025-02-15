@@ -1,18 +1,21 @@
 // main.js
 document.addEventListener('DOMContentLoaded', function() {
+  alert("main.js loaded"); // Verify file load
+
   // Determine if this instance is a Controller based on a query parameter.
   const urlParams = new URLSearchParams(window.location.search);
   const isController = urlParams.has('controller'); // e.g., URL: .../LiftandEarn/?controller
+  alert("isController: " + isController);
   console.log("Is Controller:", isController);
 
   // Set up a BroadcastChannel for communication between Display and Controller.
   const bc = new BroadcastChannel('liftandearn_channel');
   bc.onmessage = function(event) {
     console.log("BroadcastChannel message received:", event.data);
-    // This alert will appear only on the Display (for debugging, you may remove it)
+    alert("Display: Received message: " + event.data);
+    debugger; // Pause execution here for debugging.
     if (!isController && event.data === 'control-taken') {
-      alert("Display: Received 'control-taken' message via BroadcastChannel.");
-      // On the Display, hide the QR code and update the display area.
+      console.log("Received 'control-taken' on Display");
       const qrContainer = document.getElementById('qrContainer');
       if (qrContainer) {
         qrContainer.style.display = 'none';
@@ -38,12 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isController) {
       alert("Controller: Shake button pressed.");
       console.log("Shake button pressed on Controller");
-      alert("Controller: About to send broadcast message for Shake.");
+      alert("Controller: About to send 'control-taken' broadcast (Shake).");
       bc.postMessage('control-taken');
-      alert("Controller: Broadcast message sent for Shake.");
+      alert("Controller: Broadcast message sent (Shake).");
       document.getElementById('displayArea').innerText = "Shake action received on Controller!";
       alert("Controller: Display area updated (Shake).");
     } else {
+      alert("Display: Shake button pressed.");
       console.log("Shake button pressed on Display");
       document.getElementById('displayArea').innerText = "Shake action received on Display!";
     }
@@ -53,12 +57,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isController) {
       alert("Controller: Tilt button pressed.");
       console.log("Tilt button pressed on Controller");
-      alert("Controller: About to send broadcast message for Tilt.");
+      alert("Controller: About to send 'control-taken' broadcast (Tilt).");
       bc.postMessage('control-taken');
-      alert("Controller: Broadcast message sent for Tilt.");
+      alert("Controller: Broadcast message sent (Tilt).");
       document.getElementById('displayArea').innerText = "Tilt action received on Controller!";
       alert("Controller: Display area updated (Tilt).");
     } else {
+      alert("Display: Tilt button pressed.");
       console.log("Tilt button pressed on Display");
       document.getElementById('displayArea').innerText = "Tilt action received on Display!";
     }
@@ -68,12 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isController) {
       alert("Controller: Log Points button pressed.");
       console.log("Log Points button pressed on Controller");
-      alert("Controller: About to send broadcast message for Log Points.");
+      alert("Controller: About to send 'control-taken' broadcast (Log Points).");
       bc.postMessage('control-taken');
-      alert("Controller: Broadcast message sent for Log Points.");
+      alert("Controller: Broadcast message sent (Log Points).");
       document.getElementById('displayArea').innerText = "Log Points action received on Controller!";
       alert("Controller: Display area updated (Log Points).");
     } else {
+      alert("Display: Log Points button pressed.");
       console.log("Log Points button pressed on Display");
       document.getElementById('displayArea').innerText = "Log Points action received on Display!";
     }
