@@ -9,9 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const bc = new BroadcastChannel('liftandearn_channel');
   bc.onmessage = function(event) {
     console.log("BroadcastChannel message received:", event.data);
+    debugger; // Execution will pause here if a message is received.
     if (!isController && event.data === 'control-taken') {
       console.log("Received 'control-taken' on Display");
-      // On the Display, hide the QR code and update the display area.
+      // On the Display: hide the QR code and update the display area.
       const qrContainer = document.getElementById('qrContainer');
       if (qrContainer) {
         qrContainer.style.display = 'none';
