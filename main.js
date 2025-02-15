@@ -4,26 +4,26 @@ document.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
   const isController = urlParams.has('controller'); // e.g., URL: .../LiftandEarn/?controller
 
-  // Create a BroadcastChannel for communication between Display and Controller.
+  // Set up a BroadcastChannel for communication between Display and Controller.
   const bc = new BroadcastChannel('liftandearn_channel');
   bc.onmessage = function(event) {
+    console.log("BroadcastChannel message received:", event.data);
     if (!isController && event.data === 'control-taken') {
-      // On Display: hide the QR code when control is taken.
+      // On the Display: hide the QR code and update the display area.
       const qrContainer = document.getElementById('qrContainer');
       if (qrContainer) {
         qrContainer.style.display = 'none';
       }
-      // Optionally, update the display area.
       document.getElementById('displayArea').innerText = "Control taken by Controller.";
     }
   };
 
-  // On Display, generate the QR code.
+  // On the Display, generate the QR code.
   if (!isController) {
-    // Generate a QR code that points to the Controller version (i.e. add ?controller to the URL)
+    // Generate a QR code that points to the Controller version (append "?controller" to the URL)
     generateQRCode("qrContainer", window.location.href + "?controller");
   } else {
-    // On Controller, hide the QR container.
+    // On the Controller, hide the QR code container.
     const qrContainer = document.getElementById('qrContainer');
     if (qrContainer) {
       qrContainer.style.display = 'none';
@@ -31,30 +31,35 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Button event listeners.
-  // When a button is pressed on the Controller, broadcast a "control-taken" message.
   document.getElementById('shakeButton').addEventListener('click', function() {
     if (isController) {
+      console.log("Shake button pressed on Controller");
       bc.postMessage('control-taken');
       document.getElementById('displayArea').innerText = "Shake action received on Controller!";
     } else {
+      console.log("Shake button pressed on Display");
       document.getElementById('displayArea').innerText = "Shake action received on Display!";
     }
   });
 
   document.getElementById('tiltButton').addEventListener('click', function() {
     if (isController) {
+      console.log("Tilt button pressed on Controller");
       bc.postMessage('control-taken');
       document.getElementById('displayArea').innerText = "Tilt action received on Controller!";
     } else {
+      console.log("Tilt button pressed on Display");
       document.getElementById('displayArea').innerText = "Tilt action received on Display!";
     }
   });
 
   document.getElementById('logPointsButton').addEventListener('click', function() {
     if (isController) {
+      console.log("Log Points button pressed on Controller");
       bc.postMessage('control-taken');
       document.getElementById('displayArea').innerText = "Log Points action received on Controller!";
     } else {
+      console.log("Log Points button pressed on Display");
       document.getElementById('displayArea').innerText = "Log Points action received on Display!";
     }
   });
