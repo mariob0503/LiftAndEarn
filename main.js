@@ -9,10 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const bc = new BroadcastChannel('liftandearn_channel');
   bc.onmessage = function(event) {
     console.log("BroadcastChannel message received:", event.data);
-    debugger; // Execution will pause here if a message is received.
+    debugger; // Pause here to inspect the event if needed.
     if (!isController && event.data === 'control-taken') {
       console.log("Received 'control-taken' on Display");
-      // On the Display: hide the QR code and update the display area.
+      // On the Display, hide the QR code and update the display area.
       const qrContainer = document.getElementById('qrContainer');
       if (qrContainer) {
         qrContainer.style.display = 'none';
@@ -21,11 +21,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
+  // Temporary test: on the Controller, immediately send a broadcast message
+  // (Uncomment the following block to test immediate broadcast)
+  /*
+  if (isController) {
+    console.log("Controller: Sending test broadcast on load");
+    bc.postMessage('control-taken');
+  }
+  */
+
   // On the Display, generate the QR code.
   if (!isController) {
+    console.log("Display: Generating QR code");
     // Generate a QR code that points to the Controller version (append "?controller" to the URL)
     generateQRCode("qrContainer", window.location.href + "?controller");
   } else {
+    console.log("Controller: Hiding QR code container");
     // On the Controller, hide the QR code container.
     const qrContainer = document.getElementById('qrContainer');
     if (qrContainer) {
