@@ -6,15 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Include QRCode.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- (Optional) Link to your existing CSS or use Tailwind here -->
+  <!-- (Optional) Link to your existing CSS or use Tailwind CSS -->
   <link rel="stylesheet" href="styles.css">
   <style>
     /* Minimal inline styles for demonstration. 
-       In production, you’d likely use Tailwind or your own CSS files. */
+       In production, use your preferred CSS framework and refer to https://mariob0503.github.io/simplix/ for styling references. */
     body { background-color: #121212; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; }
     header { text-align: center; padding: 20px 0; }
     header h1 { font-size: 2.86rem; }
-    #centerDisplay { text-align: center; padding: 20px; }
     #qrContainer { margin: 20px auto; width: 128px; height: 128px; }
     .buttons { text-align: center; margin-top: 20px; }
     .buttons button { padding: 10px 20px; margin: 5px; background-color: #0091EA; border: none; border-radius: 5px; color: #fff; font-size: 1.1rem; cursor: pointer; }
@@ -26,12 +25,12 @@
   <!-- Header / Branding -->
   <header>
     <h1>Lift &amp; Earn</h1>
-    <!-- You can reference your existing branding by linking to https://mariob0503.github.io/simplix/ -->
     <p style="font-size: 0.9rem;">Refer to our style at <a href="https://mariob0503.github.io/simplix/" target="_blank" style="color: #0091EA;">Simplix</a></p>
   </header>
 
-  <!-- Main container: Start screen with QR code and control buttons -->
-  <div id="centerDisplay" class="initial">
+  <!-- Main container -->
+  <div id="centerDisplay">
+    <!-- The QR code will be generated here on the Display side -->
     <div id="qrContainer"></div>
     <div class="buttons">
       <button id="shakeButton">Shake</button>
@@ -44,7 +43,6 @@
   <div id="displayArea"></div>
 
   <!-- Include our JavaScript files -->
-  <script src="simulation.js"></script>
   <script src="qr.js"></script>
   <script src="main.js"></script>
 </body>
