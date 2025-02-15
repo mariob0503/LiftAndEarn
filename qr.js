@@ -1,5 +1,5 @@
 // qr.js
-function generateQRCode(containerId, url) {
+export function generateQRCode(containerId, url) {
   const container = document.getElementById(containerId);
   container.innerHTML = "";
   new QRCode(container, {
