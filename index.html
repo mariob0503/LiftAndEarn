@@ -2,443 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lift & Earn</title>
+  <title>Lift & Earn - Prototype</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Include Three.js from CDN (not used anymore but kept for consistency) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Include QRCode.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- (Optional) Link to your existing CSS or use Tailwind here -->
+  <link rel="stylesheet" href="styles.css">
   <style>
-    /* Global styling using a Simplix-inspired palette */
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: #121212;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
-      color: #ffffff;
-    }
-    /* Flag styling at the top */
-    #flag {
-      position: absolute;
-      top: 0;
-      width: 100%;
-      text-align: center;
-      padding: 20px 0;
-      z-index: 10;
-    }
-    #flag .big-bold {
-      font-size: 2.86rem;
-      font-weight: bold;
-    }
-    #flag .subtitle {
-      font-size: 1.5rem;
-      margin-top: 5px;
-    }
-    /* Blue accent class */
-    .blue {
-      color: #0091EA;
-    }
-    /* Center container for messages */
-    #centerDisplay {
-      position: absolute;
-      top: 60%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      z-index: 20;
-      width: 90%;
-    }
-    /* Initial text for the starting screen */
-    #centerDisplay.initial {
-      font-size: 1.3rem;
-      padding: 20px;
-    }
-    /* Sensor reading area */
-    #sensorReadings {
-      font-size: 1rem;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-    #message {
-      font-size: 1.3rem;
-      margin-bottom: 10px;
-    }
-    /* Points counter (formatted with two colors) */
-    #pointsCounter {
-      font-size: 1.5rem;
-      margin-bottom: 10px;
-    }
-    /* Shake progress bar container (horizontal) */
-    #shakeProgressContainer {
-      width: 80%;
-      height: 20px;
-      background-color: #555;
-      margin: 0 auto;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    /* Shake progress bar fill */
-    #shakeProgress {
-      width: 0%;
-      height: 100%;
-      background-color: #0091EA;
-    }
-    /* Tilt progress bar container (vertical) */
-    #tiltProgressContainer {
-      width: 20px;
-      height: 80px;
-      background-color: #555;
-      margin: 10px auto;
-      border-radius: 10px;
-      position: relative;
-      overflow: hidden;
-    }
-    /* Tilt progress bar fill */
-    #tiltProgress {
-      width: 100%;
-      height: 0%;
-      background-color: #0091EA;
-      position: absolute;
-      bottom: 0;
-    }
-    /* Buttons container fixed at the bottom */
-    .buttons {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      z-index: 30;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      font-size: 1.1rem;
-      background-color: #0091EA;
-      color: #ffffff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:active {
-      transform: scale(0.98);
-    }
-    /* Big bubble style for tilt success */
-    .bubble {
-      position: absolute;
-      background: rgba(0, 145, 234, 0.7);
-      border-radius: 50%;
-      opacity: 0;
-      animation: rise 2s ease-out forwards;
-    }
-    @keyframes rise {
-      0% { transform: translateY(0) scale(0.5); opacity: 1; }
-      100% { transform: translateY(-150px) scale(1); opacity: 0; }
-    }
-    /* (Swipe and Sponsor buttons removed, so related styles are removed.) */
-    /* NEW: Overlay for user tap prompt (Chrome only) */
-    #tapOverlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 100;
-      text-align: center;
-      padding-top: 40vh;
-      color: #ffffff;
-      font-size: 1.8rem;
-    }
-    #tapOverlay #tapMessage {
-      display: inline-block;
-      padding: 20px 40px;
-      border: 2px solid #0091EA;
-      border-radius: 10px;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    /* END NEW */
-    
-    /* (Swipe and Sponsor specific containers and styles removed) */
-    
-    /* (Celebration animations removed) */
-    
+    /* Minimal inline styles for demonstration. 
+       In production, you’d likely use Tailwind or your own CSS files. */
+    body { background-color: #121212; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { text-align: center; padding: 20px 0; }
+    header h1 { font-size: 2.86rem; }
+    #centerDisplay { text-align: center; padding: 20px; }
+    #qrContainer { margin: 20px auto; width: 128px; height: 128px; }
+    .buttons { text-align: center; margin-top: 20px; }
+    .buttons button { padding: 10px 20px; margin: 5px; background-color: #0091EA; border: none; border-radius: 5px; color: #fff; font-size: 1.1rem; cursor: pointer; }
+    .buttons button:active { transform: scale(0.98); }
+    #displayArea { text-align: center; font-size: 1.3rem; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <!-- Flag -->
-  <div id="flag">
-    <div class="big-bold">Lift & <span class="blue">Earn</span></div>
-    <div class="subtitle"><span class="blue">LiftAndEarn</span> Gym Reward</div>
-  </div>
+  <!-- Header / Branding -->
+  <header>
+    <h1>Lift &amp; Earn</h1>
+    <!-- You can reference your existing branding by linking to https://mariob0503.github.io/simplix/ -->
+    <p style="font-size: 0.9rem;">Refer to our style at <a href="https://mariob0503.github.io/simplix/" target="_blank" style="color: #0091EA;">Simplix</a></p>
+  </header>
 
-  <!-- Center container: initial screen message -->
+  <!-- Main container: Start screen with QR code and control buttons -->
   <div id="centerDisplay" class="initial">
-    Choose your action to log your points.
+    <div id="qrContainer"></div>
+    <div class="buttons">
+      <button id="shakeButton">Shake</button>
+      <button id="tiltButton">Tilt</button>
+      <button id="logPointsButton">Log Points</button>
+    </div>
   </div>
 
-  <!-- Buttons container: Only Shake and Tilt remain -->
-  <div class="buttons">
-    <button id="shakeButton">Shake</button>
-    <button id="tiltButton">Tilt</button>
-  </div>
+  <!-- Display area for messages -->
+  <div id="displayArea"></div>
 
-  <!-- NEW: Tap overlay (Chrome only) -->
-  <div id="tapOverlay">
-    <div id="tapMessage">Tap anywhere to continue</div>
-  </div>
-  <!-- END NEW -->
-
-  <script>
-    // NEW: Device detection & calibration
-    let isAndroid = /Android/i.test(navigator.userAgent);
-    let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
-    let requiredTiltDifference = isAndroid ? 90 : 90;
-    // END NEW
-
-    document.addEventListener('DOMContentLoaded', () => {
-      let sensorReadingsDiv = document.getElementById('sensorReadings');
-      let messageDiv = document.getElementById('message');
-      let pointsCounterDiv = document.getElementById('pointsCounter');
-      const centerDisplay = document.getElementById('centerDisplay');
-      const tapOverlay = document.getElementById('tapOverlay');
-
-      let devicemotionText = '';
-      let deviceOrientationText = '';
-      let lastSensorUpdate = 0;
-      function updateSensorReadings() {
-        const now = Date.now();
-        if (now - lastSensorUpdate < 500) return;
-        lastSensorUpdate = now;
-        if (sensorReadingsDiv) {
-          sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
-        }
-      }
-      function formatValue(val) {
-        if (val === null) return 0;
-        let rounded = Math.round(val);
-        return Math.abs(rounded) < 1 ? 0 : rounded;
-      }
-      let totalPoints = 0;
-      function updatePointsCounter() {
-        if (pointsCounterDiv) {
-          pointsCounterDiv.innerHTML = '<span class="power-white">Power</span><span class="points-blue">Points: ' + totalPoints + '</span>';
-        }
-      }
-      function addPoints(pts) {
-        totalPoints += pts;
-        updatePointsCounter();
-      }
-      function sensorDataUpdate(event) {
-        let accIG = event.accelerationIncludingGravity;
-        let acc = event.acceleration;
-        let rotation = event.rotationRate;
-        devicemotionText = "<strong>Strength Metrics:</strong><br>";
-        if (accIG) {
-          devicemotionText += `Acc IG: x=${formatValue(accIG.x)}, y=${formatValue(accIG.y)}, z=${formatValue(accIG.z)}.<br>`;
-        }
-        if (acc) {
-          devicemotionText += `Acc: x=${formatValue(acc.x)}, y=${formatValue(acc.y)}, z=${formatValue(acc.z)}.<br>`;
-        }
-        if (rotation) {
-          devicemotionText += `Rotation: alpha=${formatValue(rotation.alpha)}, beta=${formatValue(rotation.beta)}, gamma=${formatValue(rotation.gamma)}.`;
-        }
-        updateSensorReadings();
-      }
-      function sensorOrientationUpdate(event) {
-        deviceOrientationText = "<strong>Form &amp; Balance:</strong><br>";
-        deviceOrientationText += `Alpha=${formatValue(event.alpha)}, `;
-        deviceOrientationText += `Beta=${formatValue(event.beta)}, `;
-        deviceOrientationText += `Gamma=${formatValue(event.gamma)}.`;
-        updateSensorReadings();
-      }
-      function showSuccessScreen(contentHTML) {
-        centerDisplay.innerHTML = contentHTML +
-          '<div style="font-size:1.5rem; color:#0091EA; font-weight:bold; margin-top:10px;">' +
-          '<span class="power-white">Power</span><span class="points-blue">Points: ' + totalPoints + '</span>' +
-          '</div>';
-      }
-      // Modified: On successful shake, redirect to the given URL.
-      function showShakeSuccessScreen() {
-        addPoints(10);
-        // Redirect immediately
-        window.location.href = "https://mariob0503.github.io/bigbang/";
-      }
-      function showTiltSuccessScreen() {
-        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
-          "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
-        addPoints(15);
-        showSuccessScreen(contentHTML);
-      }
-      function showTapOverlay() {
-        if (navigator.userAgent.indexOf("Chrome") !== -1) {
-          tapOverlay.style.display = 'block';
-          tapOverlay.addEventListener('click', function dismissOverlay() {
-            tapOverlay.style.display = 'none';
-            tapOverlay.removeEventListener('click', dismissOverlay);
-          });
-        }
-      }
-      /* 1. Shake */
-      const shakeButton = document.getElementById('shakeButton');
-      let shakeDetected = false;
-      let shakeMotionListener = null;
-      let shakeTimeout = null;
-      let shakeStartTime = null;
-      const shakeListeningTime = 10000;
-      const requiredShakeDuration = 1500;
-      function handleShakeMotion(event) {
-        let acc = event.acceleration;
-        if (!acc || (acc.x === null && acc.y === null && acc.z === null)) {
-          acc = event.accelerationIncludingGravity;
-        }
-        const x = acc.x !== null ? formatValue(acc.x) : 0;
-        const y = acc.y !== null ? formatValue(acc.y) : 0;
-        const z = acc.z !== null ? formatValue(acc.z) : 0;
-        const magnitude = Math.sqrt(x*x + y*y + z*z);
-        if (magnitude > calibratedShakeThreshold) {
-          if (shakeStartTime === null) {
-            shakeStartTime = Date.now();
-          }
-          let elapsed = Date.now() - shakeStartTime;
-          let progressElem = document.getElementById('shakeProgress');
-          if (progressElem) {
-            let percent = Math.min(100, (elapsed / requiredShakeDuration) * 100);
-            progressElem.style.width = percent + '%';
-          }
-          if (elapsed >= requiredShakeDuration && !shakeDetected) {
-            shakeDetected = true;
-            if (shakeTimeout) clearTimeout(shakeTimeout);
-            stopShakeListening();
-            showShakeSuccessScreen();
-          }
-        } else {
-          shakeStartTime = null;
-          let progressElem = document.getElementById('shakeProgress');
-          if (progressElem) {
-            progressElem.style.width = '0%';
-          }
-        }
-      }
-      function stopShakeListening() {
-        if (shakeMotionListener) {
-          window.removeEventListener('devicemotion', shakeMotionListener);
-          shakeMotionListener = null;
-        }
-        if (shakeTimeout) {
-          clearTimeout(shakeTimeout);
-          shakeTimeout = null;
-        }
-      }
-      function startShakeTest() {
-        shakeDetected = false;
-        shakeStartTime = null;
-        centerDisplay.innerHTML = 
-          '<div id="sensorReadings">Strength Metrics:</div>' +
-          '<div id="message">Shake: Shake your phone to log your points!</div>' +
-          '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
-          '<div id="shakeProgressContainer"><div id="shakeProgress"></div></div>';
-        sensorReadingsDiv = document.getElementById('sensorReadings');
-        messageDiv = document.getElementById('message');
-        pointsCounterDiv = document.getElementById('pointsCounter');
-        window.addEventListener('devicemotion', sensorDataUpdate);
-        window.addEventListener('deviceorientation', sensorOrientationUpdate);
-        if (typeof DeviceMotionEvent !== 'undefined' &&
-            typeof DeviceMotionEvent.requestPermission === 'function') {
-          DeviceMotionEvent.requestPermission().then(response => {
-            if (response === 'granted') {
-              shakeMotionListener = handleShakeMotion;
-              window.addEventListener('devicemotion', shakeMotionListener);
-            } else {
-              messageDiv.textContent = 'Permission not granted for motion sensors.';
-            }
-          }).catch(err => {
-            console.error(err);
-            messageDiv.textContent = 'Error requesting motion sensor permission.';
-          });
-        } else {
-          shakeMotionListener = handleShakeMotion;
-          window.addEventListener('devicemotion', shakeMotionListener);
-        }
-        setTimeout(showTapOverlay, 5000);
-        shakeTimeout = setTimeout(() => {
-          stopShakeListening();
-          if (!shakeDetected) {
-            messageDiv.textContent = 'No power shake detected. Try again!';
-          }
-        }, shakeListeningTime);
-      }
-      shakeButton.addEventListener('click', startShakeTest);
-
-      /* 2. Tilt */
-      const tiltButton = document.getElementById('tiltButton');
-      let tiltBaseline = null;
-      function handleTilt(event) {
-        const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
-        if (tiltBaseline === null) {
-          tiltBaseline = currentBeta;
-          messageDiv.textContent = "Tilt: Tilt your phone by " + requiredTiltDifference + "° to log points!";
-        } else {
-          let diff = Math.abs(currentBeta - tiltBaseline);
-          let progressPercent = Math.min(100, (diff / requiredTiltDifference) * 100);
-          let tiltProgressElem = document.getElementById('tiltProgress');
-          if (tiltProgressElem) {
-            tiltProgressElem.style.height = progressPercent + '%';
-          }
-          if (diff >= requiredTiltDifference) {
-            addPoints(15);
-            showTiltSuccessScreen();
-            window.removeEventListener('deviceorientation', handleTilt);
-            tiltBaseline = null;
-          }
-        }
-      }
-      function handleTiltFromMotion(event) {
-        let accIG = event.accelerationIncludingGravity;
-        if (!accIG) return;
-        let tiltAngle = Math.atan2(accIG.y, accIG.z) * (180 / Math.PI);
-        if (tiltBaseline === null) {
-          tiltBaseline = tiltAngle;
-          messageDiv.textContent = "Tilt: Tilt your phone by " + requiredTiltDifference + "° to log points!";
-        } else {
-          let diff = Math.abs(tiltAngle - tiltBaseline);
-          let progressPercent = Math.min(100, (diff / requiredTiltDifference) * 100);
-          let tiltProgressElem = document.getElementById('tiltProgress');
-          if (tiltProgressElem) {
-            tiltProgressElem.style.height = progressPercent + '%';
-          }
-          if (diff >= requiredTiltDifference) {
-            addPoints(15);
-            showTiltSuccessScreen();
-            window.removeEventListener('devicemotion', handleTiltFromMotion);
-            tiltBaseline = null;
-          }
-        }
-      }
-      function startTiltTest() {
-        tiltBaseline = null;
-        centerDisplay.innerHTML =
-          '<div id="sensorReadings"></div>' +
-          '<div id="message">Tilt: Tilt your phone by ' + requiredTiltDifference + '° to log points!</div>' +
-          '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
-          '<div id="tiltProgressContainer"><div id="tiltProgress"></div></div>';
-        sensorReadingsDiv = document.getElementById('sensorReadings');
-        messageDiv = document.getElementById('message');
-        pointsCounterDiv = document.getElementById('pointsCounter');
-        if (isAndroid) {
-          window.addEventListener('devicemotion', handleTiltFromMotion);
-        } else {
-          window.addEventListener('deviceorientation', handleTilt);
-        }
-      }
-      tiltButton.addEventListener('click', startTiltTest);
-    });
-  </script>
+  <!-- Include our JavaScript files -->
+  <script src="simulation.js"></script>
+  <script src="qr.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
