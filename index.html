@@ -6,11 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Include QRCode.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- (Optional) Link to your existing CSS or use Tailwind CSS. -->
-  <link rel="stylesheet" href="styles.css">
   <style>
-    /* Minimal inline styles for demonstration. 
-       In production, use your preferred CSS framework and refer to https://mariob0503.github.io/simplix/ for styling references. */
+    /* Minimal inline styles for demonstration */
     body { background-color: #121212; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; }
     header { text-align: center; padding: 20px 0; }
     header h1 { font-size: 2.86rem; }
@@ -28,9 +25,8 @@
     <p style="font-size: 0.9rem;">Refer to our style at <a href="https://mariob0503.github.io/simplix/" target="_blank" style="color: #0091EA;">Simplix</a></p>
   </header>
 
-  <!-- Main container -->
-  <div id="centerDisplay">
-    <!-- The QR code will be generated here on the Display side -->
+  <!-- Main container: QR code and buttons -->
+  <div id="centerDisplay" class="initial">
     <div id="qrContainer"></div>
     <div class="buttons">
       <button id="shakeButton">Shake</button>
